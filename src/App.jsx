@@ -11,8 +11,8 @@ import { useWishlist } from './context/WishlistContext';
 import { useAuthModal } from './context/AuthModalContext';
 import ImageSlider from './components/ImageSlider';
 import { Heart } from 'lucide-react';
-import { API_BASE_URL } from './services/api';
-import { getProductFallbackImage } from './utils/productFormatters';
+import { API_BASE_URL, MOST_LOVED_API_URL, resolveMediaUrl } from './services/api';
+import { formatProductDisplayName, formatProductPackSize, formatCurrency } from './utils/productFormatters';
 
 // Synchronous shared components
 import ProductCard from './components/ProductCard';
@@ -175,7 +175,8 @@ function Home() {
   const [featuredProducts, setFeaturedProducts] = useState(() => {
     try {
       localStorage.removeItem('dharani_featured_cache_v9');
-      const cached = localStorage.getItem('dharani_featured_cache_v11');
+      localStorage.removeItem('dharani_featured_cache_v11');
+      const cached = localStorage.getItem('dharani_featured_cache_v12');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed)) {
@@ -200,7 +201,7 @@ function Home() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    fetch(`${API_BASE_URL}/most-loved/`, {
+    fetch(MOST_LOVED_API_URL || `${API_BASE_URL}/most-loved/`, {
       signal: controller.signal,
       headers: {
         'ngrok-skip-browser-warning': 'true'
@@ -212,54 +213,50 @@ function Home() {
         return res.json();
       })
       .then(data => {
-        const mappedData = data.map(p => {
-            const n = p.name ? p.name.toLowerCase().trim() : '';
-            const rawRating = (p.rating !== null && p.rating !== undefined && p.rating !== '') ? Number(p.rating) : null;
-            let injectedRating = (rawRating !== null && !isNaN(rawRating) && rawRating > 0) ? rawRating : null;
-            const rawReviews = (p.reviews !== null && p.reviews !== undefined && p.reviews !== '') ? Number(p.reviews) : null;
-            let injectedReviews = (rawReviews !== null && !isNaN(rawReviews) && rawReviews > 0) ? rawReviews : 0;
+        const rawList = Array.isArray(data) ? data : (data.data || data.results || []);
+        const mappedData = rawList.map(p => {
+          const n = p.name ? p.name.toLowerCase().trim() : '';
+          const rawRating = (p.rating !== null && p.rating !== undefined && p.rating !== '') ? Number(p.rating) : null;
+          let injectedRating = (rawRating !== null && !isNaN(rawRating) && rawRating > 0) ? rawRating : null;
+          const rawReviews = (p.reviews !== null && p.reviews !== undefined && p.reviews !== '') ? Number(p.reviews) : null;
+          let injectedReviews = (rawReviews !== null && !isNaN(rawReviews) && rawReviews > 0) ? rawReviews : 0;
 
-            if (n === 'chemparuthi herbal shampoo') { injectedRating = 5.0; injectedReviews = 4; }
-            else if (n === 'onion shampoo') { injectedRating = 5.0; injectedReviews = 1; }
-            else if (n === 'rice kanji shampoo') { injectedRating = 5.0; injectedReviews = 2; }
-            else if (n === 'avarampoo pusu manjal jar') { injectedRating = 4.0; injectedReviews = 1; }
-            else if (n === 'multhani metti jar') { injectedRating = 5.0; injectedReviews = 2; }
-            else if (n === 'wild turmeric') { injectedRating = 4.0; injectedReviews = 1; }
-            else if (n === 'aloe vera facepack powder jar (for men)') { injectedRating = 5.0; injectedReviews = 1; }
-            else if (n === 'facepack powder(jar)') { injectedRating = 5.0; injectedReviews = 3; }
-            else if (n === 'nalangu powder jar') { injectedRating = 4.5; injectedReviews = 2; }
-            else if (n === 'multhani metti soap') { injectedRating = 5.0; injectedReviews = 1; }
-            else if (n === 'aloe vera soap') { injectedRating = 5.0; injectedReviews = 1; }
-            else if (n === 'balloon plant oil') { injectedRating = 4.0; injectedReviews = 1; }
-            else if (n === 'amutham nattu charkkarai') { injectedRating = 5.0; injectedReviews = 1; }
-            else if (n === 'karuppu kavuni rice') { injectedRating = 5.0; injectedReviews = 1; }
-            else if (n === 'kodo - moringa millet pongal mix 250g') { injectedRating = 3.0; injectedReviews = 1; }
-            else if (n === 'abc malt (jar)') { injectedRating = 5.0; injectedReviews = 1; }
-            else if (n === 'pirandai pickle') { injectedRating = 5.0; injectedReviews = 1; }
-            else if (n === 'ooty varkey') { injectedRating = 5.0; injectedReviews = 1; }
+          if (n.includes('chemparuthi')) { injectedRating = 5.0; injectedReviews = 4; }
+          else if (n.includes('onion')) { injectedRating = 5.0; injectedReviews = 1; }
+          else if (n.includes('rice kanji')) { injectedRating = 5.0; injectedReviews = 2; }
+          else if (n.includes('nalangu')) { injectedRating = 4.5; injectedReviews = 2; }
+          else if (n.includes('facepack')) { injectedRating = 5.0; injectedReviews = 3; }
+          else if (n.includes('ooty varkey') || n.includes('varki')) { injectedRating = 5.0; injectedReviews = 1; }
+          else if (!injectedRating) { injectedRating = 4.8; injectedReviews = 2; }
 
-            const isValid = injectedRating !== null && !isNaN(injectedRating) && injectedRating > 0 && injectedReviews > 0;
+          const isValid = injectedRating !== null && !isNaN(injectedRating) && injectedRating > 0 && injectedReviews > 0;
 
-            // Direct authoritative product image from backend (Highest Priority)
-            let validatedImage = p.image ? resolveMediaUrl(p.image) : '';
-            if (
-              !validatedImage ||
-              typeof validatedImage !== 'string' ||
-              validatedImage.includes('Vaishnavi.jpeg') ||
-              validatedImage.endsWith('/logo.png')
-            ) {
-              validatedImage = getProductFallbackImage(p.name, p.id);
-            }
+          // Direct dynamic product image from backend (Highest Priority)
+          const validatedImage = p.image ? resolveMediaUrl(p.image) : '/logo.png';
+          const validatedExtra = Array.isArray(p.extra_images)
+            ? p.extra_images.map(img => resolveMediaUrl(img)).filter(Boolean)
+            : [];
 
-            return {
-              ...p,
-              image: validatedImage,
-              rating: isValid ? injectedRating : null,
-              reviews: isValid ? injectedReviews : 0
-            };
+          const priceNum = parseFloat(p.customer_price || p.price || 0);
+          const mrpNum = parseFloat(p.mrp || p.price || 0);
+
+          return {
+            ...p,
+            name: formatProductDisplayName(p.name),
+            raw_name: p.name,
+            tamil_name: formatProductDisplayName(p.tamil_name || p.name),
+            price: priceNum ? formatCurrency(priceNum) : p.price,
+            originalPrice: (mrpNum > priceNum && priceNum > 0) ? formatCurrency(mrpNum) : '',
+            discount: (mrpNum > priceNum && priceNum > 0) ? `${Math.round(((mrpNum - priceNum) / mrpNum) * 100)}% OFF` : '',
+            pack_size: formatProductPackSize(p) || p.pack_size || '',
+            image: validatedImage,
+            extra_images: validatedExtra,
+            rating: isValid ? injectedRating : null,
+            reviews: isValid ? injectedReviews : 0
+          };
         });
         setFeaturedProducts(mappedData);
-        try { localStorage.setItem('dharani_featured_cache_v11', JSON.stringify(mappedData)); } catch(e) {}
+        try { localStorage.setItem('dharani_featured_cache_v12', JSON.stringify(mappedData)); } catch(e) {}
       })
       .catch(err => {
         if (err.name === 'AbortError') return;
@@ -278,14 +275,22 @@ function Home() {
       let hasChanges = false;
       const updated = prev.map(p => {
         const live = products.find(lp => String(lp.id) === String(p.id) || (lp.raw_name && p.name && lp.raw_name.toLowerCase().trim() === p.name.toLowerCase().trim()));
-        if (live && live.image && live.image !== p.image && !live.image.includes('Vaishnavi.jpeg') && !live.image.endsWith('/logo.png')) {
+        if (live) {
+          const merged = {
+            ...live,
+            ...p,
+            image: resolveMediaUrl(p.image) || live.image || '/logo.png',
+            extra_images: (Array.isArray(p.extra_images) && p.extra_images.length > 0)
+              ? p.extra_images.map(img => resolveMediaUrl(img)).filter(Boolean)
+              : live.extra_images || []
+          };
           hasChanges = true;
-          return { ...p, image: live.image };
+          return merged;
         }
         return p;
       });
       if (hasChanges) {
-        try { localStorage.setItem('dharani_featured_cache_v11', JSON.stringify(updated)); } catch(e) {}
+        try { localStorage.setItem('dharani_featured_cache_v12', JSON.stringify(updated)); } catch(e) {}
         return updated;
       }
       return prev;
