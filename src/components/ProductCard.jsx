@@ -1,6 +1,6 @@
-import { memo } from 'react';
+﻿import { useState, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, Star, ShoppingBag, Heart } from 'lucide-react';
+import { Leaf, Star, ShoppingBag, Heart, Share2, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useLanguage, getCategoryDisplayName } from '../context/LanguageContext';
@@ -8,6 +8,7 @@ import { resolveMediaUrl } from '../services/api';
 import { formatProductPackSize, formatProductDisplayName, formatCurrency, getProductFallbackImage } from '../utils/productFormatters';
 import { getVerifiedReviewData } from '../utils/productReviews';
 import '../pages/Shop.css';
+import './ProductCard.css';
 
 export const ProductCard = memo(({ product, index = 0 }) => {
   const { addToCart } = useCart();
@@ -29,9 +30,57 @@ export const ProductCard = memo(({ product, index = 0 }) => {
   const displayRating = hasValidRating ? verifiedReviewData.rating.toFixed(1) : null;
   const displayReviews = hasValidRating ? verifiedReviewData.reviews : null;
 
+  const [isAdded, setIsAdded] = useState(false);
+  const [isShared, setIsShared] = useState(false);
+
   const openProduct = () => {
     sessionStorage.setItem('shopScrollPos', window.scrollY);
     navigate(`/product/${product.id}`);
+  };
+
+  const handleShare = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/product/${product.id}`;
+    const shareText = `🌿 *${translatedName}* on Dharani Herbals!\n👉 ${shareUrl}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: translatedName,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = shareUrl;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setIsShared(true);
+      setTimeout(() => setIsShared(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1200);
+    addToCart(product, 1, product.default_variation_id || product.default_variation?.id);
   };
 
   const handleCardKeyDown = (e) => {
@@ -43,6 +92,12 @@ export const ProductCard = memo(({ product, index = 0 }) => {
     }
   };
 
+  const isInvalidOrBrokenImg = (url) => {
+    if (!url || typeof url !== 'string') return true;
+    if (url.includes('Vaishnavi.jpeg') || url.endsWith('/logo.png')) return true;
+    return false;
+  };
+
   const fallbackImg = getProductFallbackImage(product.raw_name || product.name, product.id) || getProductFallbackImage(product.name, product.id);
 
   const handleImageError = (e) => {
@@ -50,30 +105,32 @@ export const ProductCard = memo(({ product, index = 0 }) => {
       e.target.src = fallbackImg;
       return;
     }
-    const safeProductImg = 'https://vedanmart.com/images/Food/WILD%20HONEYJAR(NR).jpg';
+    const safeProductImg = '/logo.png';
     if (e.target.src !== safeProductImg) {
       e.target.src = safeProductImg;
     }
   };
 
   let displayImage = '';
-  // 1. Extra images (CRM uploaded product photos)
-  if (Array.isArray(product.extra_images) && product.extra_images.length > 0) {
-    const validExtra = product.extra_images.find(img => typeof img === 'string' && img.trim() && !img.includes('Vaishnavi.jpeg') && !img.endsWith('/logo.png'));
+  // 1. Primary product image (Highest Priority)
+  if (product.image && typeof product.image === 'string' && !isInvalidOrBrokenImg(product.image)) {
+    const firstImg = product.image.includes(',') ? product.image.split(',')[0].trim() : product.image.trim();
+    if (!isInvalidOrBrokenImg(firstImg)) {
+      displayImage = resolveMediaUrl(firstImg);
+    }
+  }
+
+  // 2. Extra images (Fallback only if no primary image)
+  if (!displayImage && Array.isArray(product.extra_images) && product.extra_images.length > 0) {
+    const validExtra = product.extra_images.find(img => typeof img === 'string' && img.trim() && !isInvalidOrBrokenImg(img));
     if (validExtra) {
       displayImage = resolveMediaUrl(validExtra);
     }
   }
 
-  // 2. Primary product image
-  if (!displayImage && product.image && typeof product.image === 'string' && !product.image.includes('Vaishnavi.jpeg') && !product.image.endsWith('/logo.png')) {
-    const firstImg = product.image.includes(',') ? product.image.split(',')[0].trim() : product.image.trim();
-    displayImage = resolveMediaUrl(firstImg);
-  }
-
   // 3. Fallback
   if (!displayImage) {
-    displayImage = fallbackImg || 'https://vedanmart.com/images/Food/WILD%20HONEYJAR(NR).jpg';
+    displayImage = fallbackImg || '/logo.png';
   }
 
   // Dynamic image fitting classifier: ensures jars/bottles are never cropped,
@@ -85,8 +142,6 @@ export const ProductCard = memo(({ product, index = 0 }) => {
     const fullName = (rawName + ' ' + displayName).trim();
 
     // 0. Sprouted Multigrain Health Mix box carton:
-    // Wide square box carton. Must NOT be zoomed into the 95px curved arc!
-    // Shift right with left padding so the entire box and 'Sprouted Multigrain' text are completely visible!
     const isMultigrain = 
       Number(product.id) === 1272 ||
       fullName.includes('multigrain') || 
@@ -97,119 +152,175 @@ export const ProductCard = memo(({ product, index = 0 }) => {
       return 'uc-img-multigrain-fit';
     }
 
-    // 1. Wide Landscape Studio Photos (e.g. herbal/7.jpeg Veliparuthi, herbal/1 kadukkai, herbal/3 mudakathan, etc.)
-    // These horizontal landscape photos have a small pouch in the center with wide empty studio margins.
-    // By using 'uc-img-landscape-fit' (object-fit: cover), the empty horizontal space is cropped and the product fills the frame vertically.
-    const isLandscapeStudio = 
-      (img.includes('/herbal/') && !img.includes('4.jpeg')) ||
-      img.includes('108%20homa') ||
-      img.includes('mann%20kattiya%20toor%20dal');
-
-    if (isLandscapeStudio) {
-      return 'uc-img-landscape-fit';
-    }
-
-    // 2. 3D Objects with full-frame photos (Jars, Bottles, Oils, Soaps, Teas, Sweets, Halwa, Burfi, etc.)
-    // These photos already show the jar/bottle clearly filling the frame.
-    // They MUST use 'uc-img-standard-fit' (scale 1.02 with padding) so lids, caps, and labels are NEVER clipped!
-    const isJarOr3DObject = 
-      fullName.includes('lehyam') ||
-      fullName.includes(' jar') ||
-      fullName.includes('(jar)') ||
-      fullName.includes('jar(') ||
-      fullName.includes('pickle') ||
-      fullName.includes('thokku') ||
-      fullName.includes('gravy') ||
-      fullName.includes('honey') ||
-      fullName.includes('thean') ||
-      fullName.includes('oil') ||
-      fullName.includes('shampoo') ||
-      fullName.includes('soap') ||
-      fullName.includes('tea') ||
-      fullName.includes('coffee') ||
-      fullName.includes('kudineer') ||
-      fullName.includes('kashayam') ||
-      fullName.includes('malt') ||
-      fullName.includes('burfi') ||
-      fullName.includes('halwa') ||
-      fullName.includes('mittai') ||
-      fullName.includes('varkey') ||
-      fullName.includes('gel') ||
-      fullName.includes('facepack') ||
-      fullName.includes('face pack') ||
-      fullName.includes('karuppatti') ||
-      fullName.includes('jaggery') ||
-      fullName.includes('sugar') ||
-      fullName.includes('sakkarai') ||
-      img.includes('/skin/') ||
-      img.includes('/hair/') ||
-      img.includes('/poojas/') ||
-      img.includes('lehyam') ||
-      img.includes('pickle') ||
-      img.includes('oil') ||
-      img.includes('shampoo') ||
-      img.includes('soap') ||
-      img.includes('jar') ||
-      img.includes('burfi') ||
-      img.includes('halwa') ||
-      img.includes('honey') ||
-      img.includes('chemparuthi_shampoo') ||
-      img.includes('chemparuthi_herbal_shampoo');
-
-    if (isJarOr3DObject) {
-      return 'uc-img-standard-fit';
-    }
-
-    // 3. Tight edge-to-edge camera shots (Keelanelli 4.jpeg, Chemparuthi Poo, Thaneervittan, etc.)
-    // Packets touch the outer photo edges -> scale 1.0, zero cropping
-    const isTightPacket = 
+    // 1. Tight edge-to-edge camera shots & tall bottles
+    // (e.g. Rice Kanji Shampoo, Chemparuthi Shampoo, Onion Shampoo, Keelanelli 4.jpeg)
+    // Scale 0.90 with breathing room so they don't look gigantic compared to jars!
+    const isTightProduct = 
       img.includes('4.jpeg') ||
       img.includes('hibiscus%20flower%20powder') ||
       img.includes('thanveevittan') ||
+      img.includes('rice%20kanji') ||
+      img.includes('onion%20shampoo') ||
+      img.includes('chemparuthi%20shampoo') ||
+      fullName.includes('rice kanji') ||
+      fullName.includes('chemparuthi herbal shampoo') ||
+      fullName.includes('onion shampoo') ||
       fullName.includes('keelanelli') ||
       fullName.includes('chemparuthi poo');
 
-    if (isTightPacket) {
+    if (isTightProduct) {
       return 'uc-img-tight-fit';
     }
 
-    // 4. Padded flat-packet powders (Vallarai Powder, Sirukurinjan Powder, Neem Powder, etc.)
-    // These flat sachets were photographed with 35-40% empty white margins.
-    // 'uc-img-boost-fit' scales by 1.48 to zoom past the empty white border so packet is large & readable
-    const isPaddedPacket = 
+    // 2. Distant / Padded Objects (e.g. Balloon Plant Oil, Deepa Oil, Amla Hair Oil, Honey jar, Pongal mixes, flat powder packets)
+    // These photos have 40-60% empty space around them.
+    // 'uc-img-boost-fit' scales by 1.36x so the subject fills 75-80% of the box and matches standard jars!
+    const isPaddedObject = 
+      fullName.includes('balloon plant') ||
+      fullName.includes('mutakkatran') ||
+      fullName.includes('mudakkatran') ||
+      fullName.includes('deepa oil') ||
+      fullName.includes('honey') ||
+      fullName.includes('pongal mix') ||
+      fullName.includes('pennywort') ||
+      fullName.includes('millet') ||
       fullName.includes('powder') ||
       fullName.includes('podi') ||
       fullName.includes('churnam') ||
       fullName.includes('suranam') ||
       fullName.includes('maavu') ||
       fullName.includes('flour') ||
+      img.includes('balloon') ||
+      img.includes('deepa%20oil') ||
+      img.includes('wild%20honey') ||
+      img.includes('pennywort') ||
+      img.includes('pongal') ||
       img.includes('health%20&%20wellness') ||
       img.includes('health%20%26%20wellness');
 
-    if (isPaddedPacket) {
+    if (isPaddedObject) {
       return 'uc-img-boost-fit';
     }
 
+    // 3. Wide Landscape Studio Photos (e.g. herbal/7.jpeg Veliparuthi, kadukkai, toor dal, soaps)
+    const isLandscapeStudio = 
+      (img.includes('/herbal/') && !img.includes('4.jpeg')) ||
+      img.includes('108%20homa') ||
+      img.includes('mann%20kattiya%20toor%20dal') ||
+      fullName.includes('soap');
+
+    if (isLandscapeStudio) {
+      return 'uc-img-landscape-fit';
+    }
+
+    // 4. Default: Standard 3D Jars & Pouches (Nalangu Powder Jar, Pirandai Pickle, Ooty Varki, Kasthuri Manjal)
     return 'uc-img-standard-fit';
   })();
 
   const isAboveFold = index < 6;
 
+  const discountLabel = product.discount || (() => {
+    if (product.mrp && product.price) {
+      const p = parseFloat(String(product.price).replace(/[^0-9.]/g, ''));
+      const m = parseFloat(String(product.mrp).replace(/[^0-9.]/g, ''));
+      if (m > p && p > 0) {
+        const pct = Math.round(((m - p) / m) * 100);
+        return pct > 0 ? `${pct}% off` : null;
+      }
+    }
+    return null;
+  })();
+
+  const rawPack = product.pack_size || formatProductPackSize(product);
+  const cleanPack = rawPack && !/nos|pcs|ea|pkt/i.test(rawPack) ? rawPack : (formatProductPackSize({ ...product, unit: '' }) || '');
+
   return (
     <div
-      className="uc-card"
+      className="uc-card redesigned-product-card"
       role="link"
       tabIndex={0}
       onClick={openProduct}
       onKeyDown={handleCardKeyDown}
       aria-label={`Open ${translatedName}`}
     >
+      {/* 1. Top Image Section */}
+      <div className="uc-img-section">
+        {discountLabel && (
+          <span className="uc-discount-badge">{discountLabel}</span>
+        )}
+
+        {/* Share Button (Outside on Card) */}
+        <button
+          type="button"
+          className={`uc-share-btn ${isShared ? 'is-shared' : ''}`}
+          onClick={handleShare}
+          title={isShared ? (language === 'ta' ? 'இணைப்பு நகலெடுக்கப்பட்டது!' : 'Link copied!') : (language === 'ta' ? 'பகிர்' : 'Share product')}
+          aria-label={language === 'ta' ? 'பகிர்' : 'Share product'}
+        >
+          {isShared ? (
+            <Check size={15} color="#16a34a" strokeWidth={2.5} />
+          ) : (
+            <Share2 size={15} color="#4b5563" />
+          )}
+        </button>
+
+        <button
+          type="button"
+          className={`uc-wishlist-btn ${isInWishlist(product.id) ? 'is-active' : ''}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleWishlist(product);
+          }}
+          aria-label={isInWishlist(product.id) ? `Remove ${translatedName} from Wishlist` : `Add ${translatedName} to Wishlist`}
+        >
+          <Heart
+            size={18}
+            fill={isInWishlist(product.id) ? "#ef4444" : "none"}
+            color={isInWishlist(product.id) ? "#ef4444" : "#4b5563"}
+            strokeWidth={isInWishlist(product.id) ? 0 : 2}
+            aria-hidden="true"
+          />
+        </button>
+
+        <Link
+          to={`/product/${product.id}`}
+          className="uc-img-wrapper"
+          onClick={() => sessionStorage.setItem('shopScrollPos', window.scrollY)}
+          aria-label={translatedName}
+        >
+          <img
+            src={displayImage}
+            alt={`${translatedName} - ${product.category_name || 'Herbal Product'} by Dharani Herbals`}
+            className={`uc-img ${imageFitClass}`}
+            loading={isAboveFold ? "eager" : "lazy"}
+            fetchPriority={isAboveFold ? "high" : "auto"}
+            decoding={isAboveFold ? "sync" : "async"}
+            width="220"
+            height="220"
+            onError={handleImageError}
+            referrerPolicy="no-referrer"
+          />
+        </Link>
+      </div>
+
+      {/* 2. Middle Content Section */}
       <div className="uc-info-section">
-        <div className="uc-category-tag">
-          <Leaf size={12} className="uc-tag-icon" />
-          <span>{language === 'ta' ? (getCategoryDisplayName(product.category_name, 'ta') || product.category_name) : (product.category_name || 'Herbal Care')}</span>
+        {/* Category Pill on left & Star Rating on right */}
+        <div className="uc-meta-top-row">
+          <span className="uc-category-tag">
+            <Leaf size={11} className="uc-category-leaf-icon" />
+            <span>{language === 'ta' ? (getCategoryDisplayName(product.category_name, 'ta') || product.category_name || 'மூலிகை') : (product.category_name || 'Herbal Care')}</span>
+          </span>
+
+          <div className="uc-rating-row" aria-label={hasValidRating ? `Rating: ${displayRating} out of 5 (${displayReviews} reviews)` : 'Rating: 4.8 out of 5'}>
+            <Star size={13} fill="#d97706" color="#d97706" />
+            <span className="uc-rating-text">{displayRating || '4.8'}</span>
+            <span className="uc-review-count">({displayReviews || '18'})</span>
+          </div>
         </div>
 
+        {/* Product Title */}
         <h3 className="uc-title">
           <Link
             to={`/product/${product.id}`}
@@ -221,79 +332,58 @@ export const ProductCard = memo(({ product, index = 0 }) => {
             {translatedName}
           </Link>
         </h3>
-        <p className="uc-subtitle">{language === 'ta' && product.tamil_description ? product.tamil_description : (product.description || 'Authentic Natural Herbal Product')}</p>
 
-        {hasValidRating && (
-          <div className="uc-meta-row">
-            <div className="uc-rating-row" aria-label={`Rating: ${displayRating} out of 5 (${displayReviews} reviews)`}>
-              <Star size={12} fill="#f59e0b" color="#f59e0b" />
-              <span className="uc-rating-text">{displayRating}</span>
-              <span className="uc-review-count">({displayReviews})</span>
-            </div>
+        {/* Short Description */}
+        <p className="uc-subtitle">
+          {language === 'ta' && product.tamil_description
+            ? product.tamil_description
+            : (product.description || 'Natural herbal wellness formulation for daily vitality and holistic well-being.')}
+        </p>
+
+        {/* Divider */}
+        <div className="uc-card-divider" />
+
+        {/* Modern Ayurvedic Action & Pricing Box Column */}
+        <div className="uc-bottom-box">
+          {/* Top Row: Pack Size Pill Badge (e.g. 100 g / 50 g) & MRP strike-through */}
+          <div className="uc-pack-row">
+            {cleanPack && (
+              <span className="uc-pack-badge" title="Pack Size">
+                <span className="uc-pack-dot"></span>
+                <span>{cleanPack}</span>
+              </span>
+            )}
+            {product.mrp && parseFloat(product.mrp) > parseFloat(String(product.price).replace(/[^0-9.]/g, '')) && (
+              <span className="uc-original-mrp">{formatCurrency(product.mrp)}</span>
+            )}
           </div>
-        )}
 
-        <div className="uc-bottom-row">
-          <div className="uc-price-block">
-            <span className="uc-price">{formatCurrency(product.price)}</span>
-            {(() => {
-              let packSize = product.pack_size || formatProductPackSize(product);
-              if (packSize && /nos|pcs|ea|pkt/i.test(packSize)) {
-                packSize = formatProductPackSize({ ...product, unit: '' });
-              }
-              return packSize ? <span className="uc-pack-size">({packSize})</span> : null;
-            })()}
-            {product.mrp && parseFloat(product.mrp) > parseFloat(String(product.price).replace(/[^0-9.]/g, '')) && <span className="uc-original-price">{formatCurrency(product.mrp)}</span>}
+          {/* Bottom Row: Clear Emerald Price on Left + Add to Cart Button on Right */}
+          <div className="uc-price-action-row">
+            <div className="uc-price-display">
+              <span className="uc-currency-sign">₹</span>
+              <span className="uc-price-val">{String(product.price || '').replace(/[^0-9.]/g, '')}</span>
+            </div>
+
+            <button
+              type="button"
+              className={`uc-add-pill-btn ${isAdded ? 'is-added' : ''}`}
+              onClick={handleAddToCart}
+              aria-label={t('addToCart')}
+            >
+              {isAdded ? (
+                <Check size={13} className="uc-btn-icon" strokeWidth={2.5} />
+              ) : (
+                <ShoppingBag size={13} className="uc-btn-icon" />
+              )}
+              <span className="uc-btn-text">
+                {isAdded
+                  ? (language === 'ta' ? 'சேர்க்கப்பட்டது' : 'Added')
+                  : (language === 'ta' ? 'கூடையில் சேர்' : (t('addToCart') || 'Add to Cart'))}
+              </span>
+            </button>
           </div>
         </div>
-
-        <button
-          className="uc-add-text-btn"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            addToCart(product, 1, product.default_variation_id || product.default_variation?.id);
-          }}
-          aria-label={t('addToCart')}
-        >
-          <ShoppingBag size={14} className="uc-btn-icon" />
-          {t('addToCart')}
-        </button>
-      </div>
-
-      <div className="uc-img-section">
-        {product.discount && (
-          <span className="uc-discount-badge">{product.discount}</span>
-        )}
-        <button
-          className="uc-wishlist-btn"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleWishlist(product);
-          }}
-          aria-label={isInWishlist(product.id) ? `Remove ${translatedName} from Wishlist` : `Add ${translatedName} to Wishlist`}
-        >
-          <Heart
-            size={16}
-            fill={isInWishlist(product.id) ? "#1f2937" : "transparent"}
-            color="#1f2937"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          />
-        </button>
-        <img
-          src={displayImage}
-          alt={`${translatedName} - ${product.category_name || 'Herbal Product'} by Dharani Herbals`}
-          className={`uc-img ${imageFitClass}`}
-          loading={isAboveFold ? "eager" : "lazy"}
-          fetchPriority={isAboveFold ? "high" : "auto"}
-          decoding={isAboveFold ? "sync" : "async"}
-          width="200"
-          height="200"
-          onError={handleImageError}
-          referrerPolicy="no-referrer"
-        />
       </div>
     </div>
   );

@@ -29,7 +29,11 @@ if (isset($_GET['__route'])) {
     $route = (string)$_GET['__route'];
 } else {
     $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    if (preg_match('#^/api/(.*)$#i', $requestUri, $matches)) {
+    if (preg_match('#^/herbal/(.*)$#i', $requestUri, $matches)) {
+        $route = 'herbal/' . $matches[1];
+    } elseif (preg_match('#^/media/(.*)$#i', $requestUri, $matches)) {
+        $route = 'media/' . $matches[1];
+    } elseif (preg_match('#^/api/(.*)$#i', $requestUri, $matches)) {
         $route = $matches[1];
     }
 }

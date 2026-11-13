@@ -526,11 +526,12 @@
 
 .commitment-title {
   text-align: left;
-  font-size: 2.5rem;
+  font-size: clamp(1.4rem, 4.2vw, 2.5rem);
   font-weight: 800;
   color: #111827;
   margin-bottom: 60px;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
 }
 
 .commitment-grid {
@@ -709,9 +710,15 @@
   .about-title,
   .core-values-header h2,
   .different-header h2,
-  .commitment-title,
   .about-cta-box h2 {
     font-size: 2rem;
+  }
+
+  .commitment-title {
+    font-size: clamp(1.2rem, 4.8vw, 1.6rem) !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    margin-bottom: 30px !important;
   }
 
   .commitment-container,

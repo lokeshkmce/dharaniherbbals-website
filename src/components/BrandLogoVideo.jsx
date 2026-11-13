@@ -68,13 +68,13 @@ function getSharedVideo() {
   sharedVideo.preload = 'auto';
   sharedVideo.crossOrigin = 'anonymous';
   sharedVideo.style.position = 'fixed';
-  sharedVideo.style.top = '-9999px';
-  sharedVideo.style.left = '-9999px';
-  sharedVideo.style.width = '64px';
-  sharedVideo.style.height = '64px';
-  sharedVideo.style.opacity = '0.001';
+  sharedVideo.style.top = '0px';
+  sharedVideo.style.left = '0px';
+  sharedVideo.style.width = '1px';
+  sharedVideo.style.height = '1px';
+  sharedVideo.style.opacity = '0.01';
   sharedVideo.style.pointerEvents = 'none';
-  sharedVideo.style.zIndex = '-9999';
+  sharedVideo.style.zIndex = '-99999';
   document.body.appendChild(sharedVideo);
 
   const tryPlay = () => {
@@ -322,13 +322,11 @@ function startMasterLoop() {
   }
 }
 
-export default function BrandLogoVideo({ className = '', variant = 'nav', ariaLabel = 'Dharani Herbbals logo' }) {
+export default function BrandLogoVideo({ className = '', variant = 'nav', ariaLabel = 'Dharani Herbals logo' }) {
   const canvasRef = useRef(null);
   const [videoStarted, setVideoStarted] = useState(false);
-  const isMobile = typeof window !== 'undefined' && (variant === 'mobile-nav' || window.innerWidth <= 768);
 
   useEffect(() => {
-    if (isMobile) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -374,32 +372,11 @@ export default function BrandLogoVideo({ className = '', variant = 'nav', ariaLa
     };
   }, [variant]);
 
-  if (isMobile) {
-    return (
-      <span
-        className={`brand-logo-video-wrap brand-logo-video-wrap--${variant} ${className}`}
-        aria-label={ariaLabel}
-      >
-        <img
-          src={logo3dBright}
-          alt={ariaLabel}
-          className="brand-logo-poster"
-          style={{
-            opacity: 1,
-            visibility: 'visible',
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain'
-          }}
-        />
-      </span>
-    );
-  }
-
   return (
     <span
       className={`brand-logo-video-wrap brand-logo-video-wrap--${variant} ${className}`}
       aria-label={ariaLabel}
+      style={{ background: 'transparent' }}
     >
       <img
         src={logo3dBright}
@@ -409,14 +386,16 @@ export default function BrandLogoVideo({ className = '', variant = 'nav', ariaLa
           opacity: videoStarted ? 0 : 1,
           visibility: videoStarted ? 'hidden' : 'visible',
           transition: 'opacity 0.2s ease',
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          background: 'transparent'
         }}
       />
       <canvas
         ref={canvasRef}
         className="brand-logo-canvas"
         style={{
-          opacity: videoStarted ? 1 : 0
+          opacity: videoStarted ? 1 : 0,
+          background: 'transparent'
         }}
       />
     </span>

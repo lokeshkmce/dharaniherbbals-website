@@ -8,7 +8,7 @@ import { formatProductDisplayName } from '../utils/productFormatters';
 import { API_BASE_URL, SLIDERS_API_URL, resolveMediaUrl } from '../services/api';
 import sathuMaavuImg from '../assets/sathu_maavu_transparent.webp';
 import dharaniAvatar from '../assets/dharani_avatar.webp';
-import dharaniMascotAnnouncing from '../assets/dharani_avatar.webp';
+import dharaniMascotAnnouncing from '../assets/dharani_mascot_announcing_opt.png';
 import wildTurmericBannerImg from '../assets/wild_turmeric_offer_banner.jpg';
 import bodySoapImg from '../assets/body_soap_transparent.webp';
 import chemparuthiShampooImg from '../assets/chemparuthi_shampoo_transparent_v3.webp';
@@ -21,12 +21,23 @@ import './SliderPopup.css';
 // Curated default featured offers from live products so the widget is ALWAYS visible
 const DEFAULT_FEATURED_OFFERS = [
   {
-    id: 1243,
+    id: 1137,
+    productName: 'Pirandai Pickle Jar',
+    offerTitle: '⭐ Customer Favorite',
+    subtitle: 'Authentic Traditional Herbal Digestive Pickle',
+    image: pirandaiPickleImg,
+    link: '/product/1137',
+    originalPrice: 72,
+    finalPrice: 72,
+    discountPercentage: null
+  },
+  {
+    id: 1394,
     productName: 'Wild Turmeric',
     offerTitle: '⭐ Customer Favorite',
     subtitle: '100% Pure Kasturi Manjal for Natural Glow',
     image: wildTurmericBannerImg,
-    link: '/product/1243',
+    link: '/product/1394',
     originalPrice: 65,
     finalPrice: 65,
     discountPercentage: null
@@ -90,54 +101,54 @@ const DEFAULT_FEATURED_OFFERS = [
 
 // Helper to resolve the best high-res studio transparent image for any product
 const getProductStudioImage = (item, matchedProd) => {
-  const title = (item?.title || item?.offer || item?.text_overlay || '').toLowerCase();
-  const prodName = (matchedProd?.name || item?.productName || '').toLowerCase();
+  const title = (item?.title || item?.offer || item?.text_overlay || item?.productName || '').toLowerCase();
+  const prodName = (matchedProd?.name || item?.productName || item?.title || '').toLowerCase();
   const rawUrl = (item?.image || item?.image_url || item?.url || '').toLowerCase();
   const text = `${title} ${prodName} ${rawUrl}`;
   const idStr = String(item?.product_id || item?.id || matchedProd?.id || '');
 
-  // 1. Wild Turmeric -> full hero banner
-  if (idStr === '1243' || text.includes('turmeric') || text.includes('manjal')) {
+  // 1. Pickles & Thokku (Pirandai Pickle, Garlic Pickle, Thokku, etc.) -> ALWAYS show transparent pickle jar
+  if (idStr === '1137' || text.includes('pickle') || text.includes('pirandai') || text.includes('oorukai') || text.includes('thokku')) {
+    return pirandaiPickleImg;
+  }
+  // 2. Wild Turmeric -> full hero banner
+  if (idStr === '1394' || idStr === '1243' || text.includes('turmeric') || text.includes('manjal')) {
     return wildTurmericBannerImg;
   }
-  // 2. Soap (Mahil Rose Soap, Aloe Vera Soap, etc.) -> transparent studio cutout
-  if (idStr === '1193' || idStr === '1225' || text.includes('soap') || text.includes('mahil') || text.includes('rose')) {
+  // 3. Soap (Rose Soap, Aloe Vera Soap, Coconut Soap, etc.) -> transparent studio cutout
+  if (idStr === '1193' || idStr === '1225' || text.includes('soap')) {
     return bodySoapImg;
   }
-  // 3. Shampoo -> transparent shampoo bottle
+  // 4. Shampoo -> transparent shampoo bottle
   if (idStr === '1246' || idStr === '1255' || text.includes('shampoo') || text.includes('arappu') || (text.includes('chemparuthi') && !text.includes('oil'))) {
     return chemparuthiShampooImg;
   }
-  // 4. Face Pack & Gels
+  // 5. Face Pack & Gels
   if (idStr === '1011' || idStr === '1263' || text.includes('face pack') || text.includes('gel') || text.includes('facepack')) {
     return aloeFacePackImg;
   }
-  // 5. Powders
+  // 6. Powders
   if (idStr === '1012' || text.includes('powder') || text.includes('nalangu')) {
     return nalanguPowderImg;
   }
-  // 6. Oils
+  // 7. Oils
   if (idStr === '1013' || text.includes('oil')) {
     return poojaOilImg;
   }
-  // 7. Health Mix / Sathu Maavu
+  // 8. Health Mix / Sathu Maavu
   if (idStr === '1272' || text.includes('sathu') || text.includes('health mix') || text.includes('multigrain')) {
     return sathuMaavuImg;
-  }
-  // 8. Pickles
-  if (text.includes('pickle') || text.includes('pirandai')) {
-    return pirandaiPickleImg;
   }
 
   // Fallback to direct URL if available
   const origRawUrl = item?.image || item?.image_url || item?.url;
-  if (origRawUrl && origRawUrl.match(/\.(jpeg|jpg|png|webp|gif|svg)(\?.*)?$/i)) {
+  if (origRawUrl && typeof origRawUrl === 'string' && origRawUrl.match(/\.(jpeg|jpg|png|webp|gif|svg)(\?.*)?$/i)) {
     return resolveMediaUrl(origRawUrl);
   }
   if (matchedProd?.image) {
     return resolveMediaUrl(matchedProd.image);
   }
-  return bodySoapImg;
+  return origRawUrl ? resolveMediaUrl(origRawUrl) : pirandaiPickleImg;
 };
 
 export default function SliderPopup() {

@@ -200,44 +200,47 @@
   height: 100%;
 }
 
-.launcher-d-logo-badge {
-  width: 36px;
-  height: 36px;
-  background: transparent;
+.launcher-support-badge {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: none;
-  padding: 0;
-  transition: transform 0.2s ease;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.35);
+  transition: transform 0.25s ease;
 }
 
-.floating-launcher-trigger:hover .launcher-d-logo-badge {
+.floating-launcher-trigger:hover .launcher-support-badge {
   transform: scale(1.08);
 }
 
-.launcher-d-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
+.launcher-chat-svg {
+  stroke: #ffffff;
 }
 
 .launcher-sparkle-pip {
   position: absolute;
-  top: 0px;
-  right: 0px;
-  background: #fef08a;
-  color: #854d0e;
-  border-radius: 50%;
-  width: 14px;
-  height: 14px;
+  top: 1px;
+  right: 1px;
+  width: 12px;
+  height: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-  animation: pulsePip 2.5s infinite;
+}
+
+.online-dot {
+  width: 10px;
+  height: 10px;
+  background: #22c55e;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  display: block;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+  animation: pulsePip 2s infinite ease-in-out;
 }
 
 @keyframes pulsePip {

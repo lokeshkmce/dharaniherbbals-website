@@ -7,15 +7,16 @@ import p1 from '../assets/4.webp';
 import p2 from '../assets/2.webp';
 import p4 from '../assets/heart.webp';
 
-const SLIDE_DURATION_MS = 10000;
+const SLIDE_DURATION_MS = 6000;
 const MIN_SWIPE_DISTANCE = 50;
 
 const baseSlidesTemplate = [
   {
-    id: 3, // Fallback
-    mainTitle: "Rooted in Tradition, Crafted with Care from Handpicked Herbs for Pure and Timeless Wellness.",
+    id: 3, // Fallback / Video Slide
+    productName: "Dharani Herbals",
+    mainTitle: "Pure & Timeless Herbal Wellness",
     offer: 'PREMIUM QUALITY',
-    productImg: p4,
+    productImg: null, // Pure cinematic video hero - no obstructive card!
     bgGradient: 'linear-gradient(135deg, #1f2937 0%, #111827 50%, #030712 100%)',
     link: '/shop'
   },
@@ -47,8 +48,15 @@ const SliderVideo = memo(function SliderVideo({ slide, isActive }) {
   const videoRef = useRef(null);
   const [hasVideoError, setHasVideoError] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(isActive);
   const clipStartTime = slide.clipStartTime ?? 0;
   const hasClipRange = Number.isFinite(slide.clipEndTime);
+
+  useEffect(() => {
+    if (isActive && !hasLoaded) {
+      setHasLoaded(true);
+    }
+  }, [isActive, hasLoaded]);
 
   let baseVideoUrl = slide.bgVideo || '';
   if (baseVideoUrl && baseVideoUrl.includes('ngrok-free.dev')) {
@@ -63,7 +71,9 @@ const SliderVideo = memo(function SliderVideo({ slide, isActive }) {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || hasVideoError || !videoSrc) return;
+    if (!video || hasVideoError || !videoSrc || !hasLoaded) return;
+
+    video.playbackRate = 1.15; // Fast lively video movement as requested
 
     if (isActive) {
       const playPromise = video.play();
@@ -73,7 +83,7 @@ const SliderVideo = memo(function SliderVideo({ slide, isActive }) {
     } else {
       video.pause();
     }
-  }, [hasVideoError, videoSrc, isActive]);
+  }, [hasVideoError, videoSrc, isActive, hasLoaded]);
 
   const handleTimeUpdate = (e) => {
     if (!hasClipRange) return;
@@ -95,21 +105,22 @@ const SliderVideo = memo(function SliderVideo({ slide, isActive }) {
       muted 
       playsInline 
       autoPlay={isActive}
-      preload={isActive ? "metadata" : "none"}
+      preload={isActive ? "auto" : "none"}
       className={`slide-bg-video ${isActive ? 'active' : ''}`}
       onTimeUpdate={handleTimeUpdate}
       onError={() => setHasVideoError(true)}
       onCanPlay={() => setIsVideoReady(true)}
+      onLoadedData={() => setIsVideoReady(true)}
       style={{ 
         display: hasVideoError ? 'none' : 'block',
-        visibility: isActive && isVideoReady ? 'visible' : 'hidden',
-        opacity: isActive && isVideoReady ? 1 : 0, 
-        transition: 'opacity 0.8s ease, visibility 0.8s ease',
+        visibility: isActive ? 'visible' : 'hidden',
+        opacity: isActive ? 1 : 0, 
+        transition: 'opacity 0.6s ease',
         transform: 'translateZ(0)',
         willChange: 'opacity, visibility',
         backgroundColor: 'transparent'
       }}
-      src={videoSrc}
+      src={hasLoaded ? videoSrc : undefined}
     />
   );
 });
@@ -131,13 +142,13 @@ const ImageSlider = function() {
     let bgVideoUrl = '';
     if (index === 0) bgVideoUrl = '/videos/video_1.mp4';
     else if (index === 1) bgVideoUrl = '/videos/video_2.mp4';
-    else if (index === 2) bgVideoUrl = '/videos/video_3.mp4';
+    else if (index === 2) bgVideoUrl = '/videos/Wild Turmeric.mp4';
 
     return {
       ...slide,
       bgVideo: bgVideoUrl,
-      mainTitle: t(titleKey),
-      offer: t(offerKey)
+      mainTitle: t(titleKey) || slide.mainTitle || '',
+      offer: t(offerKey) || slide.offer || ''
     };
   });
 
@@ -203,27 +214,36 @@ const ImageSlider = function() {
             )}
             
             <div className="promo-layout" style={{ position: 'relative', zIndex: 2 }}>
-              {/* Left Content */}
+              {/* Text Header Content */}
               <div className="promo-text-col">
                 <h3 className="promo-small-title">{slide.productName}</h3>
                 <h1 className="promo-main-title">{slide.mainTitle}</h1>
-                <button className="promo-shop-btn" onClick={() => navigate(slide.link)}>{t('shopNow')}</button>
               </div>
 
               {/* Center Content (Product) */}
-              <div className="promo-product-col">
-                {slide.productImg && (
+              {slide.productImg && (
+                <div className="promo-product-col">
                   <div className="promo-product-animator">
                     <img 
                       src={slide.productImg} 
                       alt={slide.productName} 
-                      className={`promo-product-img ${slide.id === 3 ? 'zoomed-product' : ''}`} 
+                      className="promo-product-img" 
                       loading={index === 0 ? 'eager' : 'lazy'}
                       decoding="async"
                     />
                   </div>
-                )}
-                <button className="promo-shop-btn promo-shop-btn-mobile" onClick={() => navigate(slide.link)}>{t('shopNow')}</button>
+                </div>
+              )}
+
+              {/* Bottom Action Area (Positioned cleanly at bottom above the 3 dots) */}
+              <div className="promo-bottom-action">
+                <button 
+                  type="button"
+                  className="promo-shop-btn" 
+                  onClick={() => navigate(slide.link)}
+                >
+                  {t('shopNow') || 'SHOP NOW >'}
+                </button>
               </div>
 
             </div>

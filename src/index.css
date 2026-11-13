@@ -74,11 +74,12 @@ html {
   overflow-x: hidden;
   box-sizing: border-box;
   -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
 }
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg);
+  background: #FAF8F2 !important;
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -88,6 +89,7 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  touch-action: manipulation;
   position: relative;
   box-sizing: border-box;
 }
@@ -101,6 +103,7 @@ body {
   max-width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
+  background: #FAF8F2 !important;
 }
 
 h1, h2, h3, h4, h5, h6 {

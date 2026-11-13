@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import { ShoppingCart, ShieldCheck, Leaf, Truck, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Share2, MessageCircle, Camera, Copy, Check, Package, Plus, Star, MessageSquare, FileText, CheckCircle, ArrowLeft, Sparkles, Compass, Info, X, Edit3, Send } from 'lucide-react';
+import { ShoppingCart, ShieldCheck, Leaf, Truck, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Share2, MessageCircle, Camera, Copy, Check, Package, Plus, Star, MessageSquare, FileText, CheckCircle, ArrowLeft, Sparkles, Compass, Info, X, Edit3, Send, Heart } from 'lucide-react';
+import { useWishlist } from '../context/WishlistContext';
 import imgLifestyle from '../assets/herbal_lifestyle.webp';
 import imgIngredients from '../assets/herbal_ingredients.webp';
 import imgTexture from '../assets/herbal_texture.webp';
@@ -19,12 +20,15 @@ import { getVerifiedReviewData, getProductReviewsAndSummary } from '../utils/pro
 import './ProductDetails.css';
 
 export default function ProductDetails() {
-  const { id } = useParams();
+  const { id: rawId } = useParams();
+  // Legacy or offer alias: 1243 maps to 1394 (Wild Turmeric)
+  const id = String(rawId) === '1243' ? '1394' : rawId;
   const navigate = useNavigate();
   const { products, loading, getProductById } = useProducts();
   const { language, translateText, translateProduct, bulkProductNames, t } = useLanguage();
   const contextProduct = (getProductById ? getProductById(id) : null) || products.find(p => p.id === parseInt(id));
   const [fetchedProduct, setFetchedProduct] = useState(null);
+  const [isFetchingDirect, setIsFetchingDirect] = useState(!contextProduct && Boolean(id));
   const product = contextProduct || fetchedProduct;
   const sliderRef = useRef(null);
   const trackRef = useRef(null);
@@ -350,6 +354,7 @@ export default function ProductDetails() {
   const [ingredientsExpanded, setIngredientsExpanded] = useState(true);
   const [ingredientsTab, setIngredientsTab] = useState('key');
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const defaultDesc = "Experience the incredible benefits of our completely natural, 100% organic herbal formulation. Carefully crafted using traditional methods and sustainably sourced ingredients to ensure the highest quality for your holistic wellness journey. Free from harmful chemicals, parabens, and artificial preservatives.";
 
@@ -361,9 +366,11 @@ export default function ProductDetails() {
   // If product is not in global context (e.g. newly created on backend), fetch directly by ID
   useEffect(() => {
     if (!contextProduct && id) {
+      setIsFetchingDirect(true);
       const endpoints = [
-        `http://127.0.0.1:8000/herbal/products/${id}/`,
-        `${API_BASE_URL}/products/${id}/`
+        `/api/products/${id}/`,
+        `${API_BASE_URL}/products/${id}/`,
+        `http://179.197.251.47:30080/herbal/products/${id}/`
       ];
 
       let isMounted = true;
@@ -371,13 +378,14 @@ export default function ProductDetails() {
         for (const url of endpoints) {
           try {
             const res = await fetch(url, { headers: { 'ngrok-skip-browser-warning': 'true' } });
-            if (res.ok) {
+            const contentType = res.headers.get('content-type') || '';
+            if (res.ok && contentType.includes('application/json')) {
               const data = await res.json();
               const p = data.data || data;
               if (p && p.id && isMounted) {
                 const priceNum = parseFloat(p.customer_price || p.price || p.mrp || 0);
                 const mrpNum = parseFloat(p.mrp || p.price || 0);
-                const resolvedImg = resolveMediaUrl(p.image) || getProductFallbackImage(p.name, p.id) || 'https://vedanmart.com/images/Food/WILD%20HONEYJAR(NR).jpg';
+                const resolvedImg = resolveMediaUrl(p.image) || '/logo.png';
                 const formattedP = {
                   ...p,
                   name: formatProductDisplayName(p.name),
@@ -399,14 +407,18 @@ export default function ProductDetails() {
                 setTranslatedName(formatProductDisplayName(formattedP.name));
                 setTranslatedSubtitle(formattedP.subtitle || '100% Authentic Botanical Care');
                 setTranslatedDesc(getProductDescription(formattedP) || formattedP.description || defaultDesc);
+                setIsFetchingDirect(false);
                 return;
               }
             }
           } catch (e) {}
         }
+        if (isMounted) setIsFetchingDirect(false);
       })();
 
       return () => { isMounted = false; };
+    } else {
+      setIsFetchingDirect(false);
     }
   }, [id, contextProduct]);
 
@@ -686,8 +698,8 @@ export default function ProductDetails() {
     return scored.slice(0, 6).map(s => s.product);
   }, [product, products, productIngredients]);
 
-  if (loading) {
-    return <div className="pd-pro-wrapper"><div style={{ padding: '100px', textAlign: 'center' }}>Loading...</div></div>;
+  if (loading || isFetchingDirect) {
+    return <div className="pd-pro-wrapper"><div style={{ padding: '100px', textAlign: 'center' }}>Loading product details...</div></div>;
   }
 
   if (!product) {
@@ -750,13 +762,13 @@ export default function ProductDetails() {
     mediaItems.push({
       type: '3d',
       src: resolveMediaUrl(product.model_3d),
-      thumb: mediaItems[0]?.src || fallbackImg || 'https://vedanmart.com/images/Food/WILD%20HONEYJAR(NR).jpg'
+      thumb: mediaItems[0]?.src || fallbackImg || '/logo.png'
     });
   }
 
   // 4. Fallback if no images found
   if (mediaItems.length === 0) {
-    const safeImg = fallbackImg || 'https://vedanmart.com/images/Food/WILD%20HONEYJAR(NR).jpg';
+    const safeImg = fallbackImg || '/logo.png';
     mediaItems.push({ type: 'image', src: safeImg, thumb: safeImg });
   }
 
@@ -1066,7 +1078,7 @@ export default function ProductDetails() {
                           e.target.src = fallbackImg;
                           return;
                         }
-                        const safeProductImg = 'https://vedanmart.com/images/Food/WILD%20HONEYJAR(NR).jpg';
+                        const safeProductImg = '/logo.png';
                         if (e.target.src !== safeProductImg) {
                           e.target.src = safeProductImg;
                         }
@@ -1084,6 +1096,15 @@ export default function ProductDetails() {
             )}
 
             <div className="pd-pro-image-share">
+              <button
+                type="button"
+                className={`pd-image-wishlist-trigger ${isInWishlist(product?.id) ? 'is-active' : ''}`}
+                onClick={() => product && toggleWishlist(product)}
+                aria-label={isInWishlist(product?.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                title={isInWishlist(product?.id) ? "In Wishlist" : "Add to Wishlist"}
+              >
+                <Heart size={20} fill={isInWishlist(product?.id) ? "#ef4444" : "none"} color={isInWishlist(product?.id) ? "#ef4444" : "#1f2937"} strokeWidth={isInWishlist(product?.id) ? 0 : 2} />
+              </button>
               <button
                 type="button"
                 className="pd-image-share-trigger"
@@ -1245,6 +1266,15 @@ export default function ProductDetails() {
             <div className="pd-nike-share-row">
               <button
                 type="button"
+                className={`pd-nike-share-item pd-nike-wishlist-item ${isInWishlist(product?.id) ? 'is-active' : ''}`}
+                onClick={() => product && toggleWishlist(product)}
+                title={isInWishlist(product?.id) ? "In Wishlist" : "Add to Wishlist"}
+              >
+                <Heart size={16} fill={isInWishlist(product?.id) ? "#ef4444" : "none"} color={isInWishlist(product?.id) ? "#ef4444" : "#4b5563"} />
+                <span>{isInWishlist(product?.id) ? 'Wishlisted' : 'Wishlist'}</span>
+              </button>
+              <button
+                type="button"
                 className="pd-nike-share-item"
                 onClick={shareToWhatsApp}
                 title="Share on WhatsApp"
@@ -1300,7 +1330,7 @@ export default function ProductDetails() {
               <div className="pd-nike-delivery-success">
                 <CheckCircle size={15} color="#16a34a" />
                 <span>
-                  Deliverable to {deliveryInfo.location ? `${deliveryInfo.location}` : `PIN ${deliveryInfo.pin}`} in ${deliveryInfo.timeline}
+                  Deliverable to {deliveryInfo.location ? `${deliveryInfo.location}` : `PIN ${deliveryInfo.pin}`} in {deliveryInfo.timeline}
                 </span>
               </div>
             )}
@@ -1771,7 +1801,7 @@ export default function ProductDetails() {
               aria-label="Share on WhatsApp"
             >
               <MessageCircle size={18} />
-              <span className="desktop-only">Share</span>
+              <span>Share</span>
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Leaf, ArrowRight } from 'lucide-react';
 import { useLanguage, getCategoryDisplayName } from '../context/LanguageContext';
 import { API_BASE_URL, resolveMediaUrl } from '../services/api';
 import './CategoryStrip.css';
@@ -26,29 +26,63 @@ const LOCAL_CATEGORY_IMAGES = {
   "Beverages": imgBeverages
 };
 
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: "Hair" },
+  { id: 2, name: "Skin" },
+  { id: 3, name: "Baby" },
+  { id: 4, name: "Body" },
+  { id: 5, name: "Food" },
+  { id: 6, name: "Health & Wellness" },
+  { id: 7, name: "Beverages" },
+  { id: 8, name: "Poojas" }
+];
+
 export default function CategoryStrip() {
   const location = useLocation();
   const [categories, setCategories] = useState(() => {
     try {
       const cached = localStorage.getItem('dharani_categories_cache');
-      const parsed = cached ? JSON.parse(cached) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
+      const parsed = cached ? JSON.parse(cached) : null;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) { }
+    return DEFAULT_CATEGORIES;
   });
 
-  const [loading, setLoading] = useState(() => {
-    try {
-      const cached = localStorage.getItem('dharani_categories_cache');
-      return cached ? false : true;
-    } catch (e) {
-      return true;
-    }
-  });
   const [searchParams] = useSearchParams();
   const activeCategory = searchParams.get('category');
   const { language, t } = useLanguage();
+
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      el.addEventListener('scroll', checkScroll, { passive: true });
+      checkScroll();
+      window.addEventListener('resize', checkScroll);
+      return () => {
+        el.removeEventListener('scroll', checkScroll);
+        window.removeEventListener('resize', checkScroll);
+      };
+    }
+  }, [categories]);
+
+  const handleScroll = (direction) => {
+    if (scrollRef.current) {
+      const amount = direction === 'left' ? -320 : 320;
+      scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -99,12 +133,10 @@ export default function CategoryStrip() {
         try {
           localStorage.setItem('dharani_categories_cache', JSON.stringify(catsArray));
         } catch (e) { }
-        setLoading(false);
       })
       .catch(err => {
         if (err.name === 'AbortError') return;
         console.warn('Unable to fetch categories, using cache/defaults:', err.message);
-        setLoading(false);
       });
     return () => {
       clearTimeout(timeoutId);
@@ -116,59 +148,111 @@ export default function CategoryStrip() {
     return null;
   }
 
-  if (loading) {
-    return null;
-  }
-
   return (
     <section className="category-strip-container" id="categories" aria-label="Product Categories">
-      <div className="category-strip-header">
-        <span className="category-strip-eyebrow">{language === 'ta' ? '✦ ஆயுர்வேத ஆரோக்கிய பிரிவுகள் ✦' : '✦ AYURVEDIC WELLNESS CATEGORIES ✦'}</span>
-        <h2 className="category-strip-title">{language === 'ta' ? 'தேர்ந்தெடுக்கப்பட்ட மூலிகை தயாரிப்புகள்' : 'Curated Herbal Formulations'}</h2>
-        <p className="category-strip-subtitle">{language === 'ta' ? 'தூய்மை மற்றும் வீரியத்திற்காக காலம் சோதித்த பாரம்பரிய தென்னிந்திய மூலிகை தீர்வுகள்.' : 'Discover handcrafted South Indian botanical solutions, time-tested for purity and potency.'}</p>
+      {/* Category Strip Heading */}
+      <div className="cat-strip-header-wrap">
+        <div className="cat-strip-badge">
+          <Leaf size={12} className="cat-badge-leaf" />
+          <span>{language === 'ta' ? 'மூலிகைப் பிரிவுகள்' : 'AYURVEDIC CATEGORIES'}</span>
+        </div>
+        <h2 className="cat-strip-title">
+          {language === 'ta' ? 'பாரம்பரிய மூலிகை நலப் பிரிவுகள்' : 'Explore by Wellness Category'}
+        </h2>
       </div>
-      <div className="category-strip-scroll">
 
-        {/* "All" pill — clears category filter */}
-        <Link
-          to="/shop"
-          className={`category-item cat-animate-up ${!activeCategory ? 'category-item--active' : ''}`}
-          style={{ animationDelay: '0s' }}
-        >
-          <div className="category-blob-wrapper">
-            <div className="category-all-icon">{t('allCategory')}</div>
-          </div>
-          <div className="category-btn">
-            <span>{t('ourCollection') || 'Our Collection'} &gt;</span>
-          </div>
-        </Link>
+      <div className="category-strip-wrapper-rel">
+        {/* Navigation Arrow Left (Desktop) */}
+        {canScrollLeft && (
+          <button
+            type="button"
+            className="cat-scroll-arrow cat-scroll-arrow-left"
+            onClick={() => handleScroll('left')}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft size={20} />
+          </button>
+        )}
 
-        {categories.map((category, index) => {
-          const categoryImage = resolveMediaUrl(category.image) || LOCAL_CATEGORY_IMAGES[category.name];
-          return (
-            <Link
-              key={category.id}
-              to={`/shop?category=${encodeURIComponent(category.name)}`}
-              className={`category-item cat-animate-up ${activeCategory === category.name ? 'category-item--active' : ''}`}
-              style={{ animationDelay: `${(index + 1) * 0.04}s` }}
-            >
-              <div className={`category-blob-wrapper ${[].includes(category.name) ? 'has-css-blob' : ''}`}>
-                <img
-                  src={categoryImage ? `${categoryImage}?v=42` : ''}
-                  alt={category.name}
-                  className="category-img"
-                  loading="lazy"
-                  decoding="async"
-                  width="64"
-                  height="64"
-                />
+        <div className="category-strip-scroll" ref={scrollRef}>
+          {/* "All" Hero Pod — clears category filter */}
+          <Link
+            to="/shop"
+            className={`category-item category-arch-card cat-animate-up ${!activeCategory ? 'category-arch-card--active category-item--active' : ''}`}
+            style={{ animationDelay: '0s' }}
+          >
+            <div className="cat-card-inner">
+              <div className="cat-aura-glow cat-aura-all" />
+              <div className="cat-shimmer-sweep" />
+
+              <div className="cat-img-pod cat-img-pod-all">
+                <div className="cat-all-hero-circle">
+                  <Sparkles size={24} className="cat-sparkle-anim" />
+                  <span className="cat-all-badge-text">{t('allCategory') || 'All'}</span>
+                </div>
               </div>
-              <div className="category-btn">
-                <span>{(language === 'ta' ? getCategoryDisplayName(category.name, 'ta') : category.name)} &gt;</span>
+
+              <div className="cat-label-pill">
+                <span className="cat-label-name">{language === 'ta' ? 'அனைத்தும்' : 'Shop All'}</span>
+                <span className="cat-label-arrow"><ArrowRight size={13} /></span>
               </div>
-            </Link>
-          );
-        })}
+            </div>
+          </Link>
+
+          {categories.map((category, index) => {
+            const categoryImage = resolveMediaUrl(category.image) || LOCAL_CATEGORY_IMAGES[category.name];
+            const displayName = language === 'ta' ? getCategoryDisplayName(category.name, 'ta') : category.name;
+            const isActive = activeCategory === category.name;
+
+            return (
+              <Link
+                key={category.id}
+                to={`/shop?category=${encodeURIComponent(category.name)}`}
+                className={`category-item category-arch-card cat-animate-up ${isActive ? 'category-arch-card--active category-item--active' : ''}`}
+                style={{ animationDelay: `${(index + 1) * 0.05}s` }}
+              >
+                <div className="cat-card-inner">
+                  {/* Glowing Botanical Halo */}
+                  <div className="cat-aura-glow" />
+
+                  {/* Shimmer sweep on hover */}
+                  <div className="cat-shimmer-sweep" />
+
+                  {/* Steady Botanical Pedestal & Product Image */}
+                  <div className="cat-img-pod">
+                    <img
+                      src={categoryImage ? `${categoryImage}?v=42` : ''}
+                      alt={displayName}
+                      className="cat-product-img"
+                      loading="lazy"
+                      decoding="async"
+                      width="96"
+                      height="96"
+                    />
+                  </div>
+
+                  {/* Luxury Title Pill */}
+                  <div className="cat-label-pill">
+                    <span className="cat-label-name">{displayName}</span>
+                    <span className="cat-label-arrow"><ChevronRight size={13} /></span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Navigation Arrow Right (Desktop) */}
+        {canScrollRight && (
+          <button
+            type="button"
+            className="cat-scroll-arrow cat-scroll-arrow-right"
+            onClick={() => handleScroll('right')}
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={20} />
+          </button>
+        )}
       </div>
     </section>
   );

@@ -28,7 +28,7 @@ import { getProductDescription, getProductIngredients, getProductDirections } fr
 import { formatProductPackSize, formatVariationLabel, formatProductDisplayName, formatCurrency } from '../utils/productFormatters';
 import { getDefaultVariation } from '../data/productVariationsData';
 import { getProductReviewsAndSummary } from '../utils/productReviews';
-import { API_BASE_URL } from '../services/api';
+import { API_BASE_URL, resolveMediaUrl } from '../services/api';
 import './ProductAdLanding.css';
 
 export default function ProductAdLanding() {
@@ -274,16 +274,22 @@ export default function ProductAdLanding() {
     if (typeof product.image === 'string' && product.image.includes(',')) {
       product.image.split(',').forEach(img => {
         const trimmed = img.trim();
-        if (trimmed) mediaItems.push({ src: trimmed });
+        const resolved = resolveMediaUrl(trimmed);
+        if (resolved && !mediaItems.some(m => m.src === resolved)) mediaItems.push({ src: resolved });
       });
     } else {
-      mediaItems.push({ src: product.image });
+      const resolved = resolveMediaUrl(product.image);
+      if (resolved) mediaItems.push({ src: resolved });
     }
   }
   if (crmGalleryImages.length > 0) {
     crmGalleryImages.forEach(imgObj => {
-      if (imgObj.image && !mediaItems.some(m => m.src === imgObj.image)) {
-        mediaItems.push({ src: imgObj.image });
+      const raw = imgObj.image || imgObj.url;
+      if (raw) {
+        const resolved = resolveMediaUrl(raw);
+        if (resolved && !mediaItems.some(m => m.src === resolved)) {
+          mediaItems.push({ src: resolved });
+        }
       }
     });
   }
@@ -419,7 +425,7 @@ export default function ProductAdLanding() {
     : (productIngredients && productIngredients.length > 0
         ? [
             `Formulated with pure botanical extracts (${productIngredients.slice(0, 3).join(', ')})`,
-            'Crafted following authentic traditional Siddha & Ayurvedic methods',
+            'Crafted following authentic traditional Siddha & herbal methods',
             '100% Free from synthetic parabens, harsh sulfates, and toxic fillers',
             'Safe, gentle, and designed for holistic everyday personal wellness'
           ]

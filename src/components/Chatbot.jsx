@@ -19,7 +19,7 @@ const PREDEFINED_RESPONSES = [
   },
   {
     keywords: ['about dharani', 'about us', 'who are you', 'what is dharani', 'about company'],
-    response: "Dharani Herbbals provides pure, chemical-free herbal remedies for health and beauty. We bring ancient Siddha and Ayurvedic wisdom into modern daily care."
+    response: "Dharani Herbals provides pure, chemical-free herbal remedies for health and beauty. We bring ancient Siddha and traditional herbal wisdom into modern daily care."
   },
   {
     keywords: ['mission', 'goal', 'vision'],

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+﻿import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { API_BASE_URL, NGROK_DOMAIN, resolveMediaUrl } from '../services/api';
 import { formatProductPackSize, formatVariationLabel, formatProductDisplayName, formatCurrency, consolidateProducts, getProductFallbackImage } from '../utils/productFormatters';
 import { getProductVariations, getDefaultVariation } from '../data/productVariationsData';
@@ -40,10 +40,10 @@ export function ProductsProvider({ children }) {
           ['staff', 'store', 'store_member'].includes(role2) ||
           ['staff', 'store', 'store_member'].includes(type1) ||
           ['staff', 'store', 'store_member'].includes(type2);
-        if (isStoreMember) return 'dharani_products_cache_store_v6';
+        if (isStoreMember) return 'dharani_products_cache_store_v8';
       }
     } catch (e) { }
-    return 'dharani_products_cache_customer_v6';
+    return 'dharani_products_cache_customer_v8';
   };
 
   const transformProduct = (p) => {
@@ -320,23 +320,25 @@ export function ProductsProvider({ children }) {
                 }
                 return 0;
             })(),
+            is_new: Boolean(p.is_new),
+            created_at: p.created_at || null,
             badge: p.is_new ? 'NEW' : '',
             badgeColor: p.is_new ? 'green' : '',
             image: (() => {
-              // 1. Highest priority: Fresh image uploaded from CRM via product-images API
+              // 1. Highest priority: Direct main product image
+              if (p.image && !p.image.includes('Vaishnavi.jpeg') && !p.image.endsWith('/logo.png')) {
+                return resolveMediaUrl(p.image);
+              }
+              // 2. Fresh image uploaded from CRM via product-images API (fallback only)
               if (extraImagesMap && extraImagesMap[String(p.id)]) {
                 return extraImagesMap[String(p.id)];
               }
-              // 2. Fresh image in product extra_images array (uploaded in CRM Django admin)
+              // 3. Fresh image in product extra_images array (fallback only)
               if (Array.isArray(p.extra_images) && p.extra_images.length > 0) {
                 const crmExtra = p.extra_images.slice().reverse().find(img => img && typeof img === 'string' && (img.includes('/media/products/') || img.includes('api.codingboss') || img.includes('WhatsApp_Image')));
                 if (crmExtra) {
                   return resolveMediaUrl(crmExtra);
                 }
-              }
-              // 3. Direct product image
-              if (p.image && !p.image.includes('Vaishnavi.jpeg') && !p.image.endsWith('/logo.png')) {
-                return resolveMediaUrl(p.image);
               }
               // 4. Any other extra image
               if (Array.isArray(p.extra_images) && p.extra_images.length > 0) {
@@ -347,7 +349,7 @@ export function ProductsProvider({ children }) {
               }
               // 5. Authentic fallback
               const fallbackImg = getProductFallbackImage(p.name, p.id) || getProductFallbackImage(displayName, p.id);
-              return fallbackImg || 'https://vedanmart.com/images/Food/WILD%20HONEYJAR(NR).jpg';
+              return fallbackImg || '/logo.png';
             })(),
             extra_images: Array.isArray(p.extra_images) ? p.extra_images.map(img => resolveMediaUrl(img)).filter(Boolean) : [],
             category_name: p.category_name,

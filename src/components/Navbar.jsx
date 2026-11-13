@@ -292,7 +292,7 @@ export default function Navbar() {
             <BrandLogoVideo variant="nav" />
             <div className="brand-text-logo">
               <div className="brand-text-line1">Dharani</div>
-              <div className="brand-text-line2">Herbbals<span className="brand-reg">®</span></div>
+              <div className="brand-text-line2">Herbals<span className="brand-reg">®</span></div>
             </div>
           </Link>
         </div>
@@ -474,7 +474,7 @@ export default function Navbar() {
             <BrandLogoVideo variant="mobile-nav" />
             <div className="brand-text-logo">
               <div className="brand-text-line1">Dharani</div>
-              <div className="brand-text-line2">Herbbals<span className="brand-reg">®</span></div>
+              <div className="brand-text-line2">Herbals<span className="brand-reg">®</span></div>
             </div>
           </div>
           <button className="close-drawer-btn" onClick={toggleMobileMenu}>

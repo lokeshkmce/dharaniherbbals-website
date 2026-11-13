@@ -59,40 +59,102 @@
   }
 }
 
-/* Keep existing right-side overlay */
+/* Natural transparent overlay for video slides */
 .promo-slide.has-video::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.08) 38%, rgba(0, 0, 0, 0) 70%);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 45%, transparent 85%) !important;
 }
 
+/* Gold and White Shimmering Neon Light Sweep Animation for Video Title */
+@keyframes goldShimmerSweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
 
-.slide-bg-overlay {
-  display: none; /* No longer needed as we fade the video naturally */
+/* 100% Transparent text container - no harsh black box */
+.promo-slide.has-video .promo-text-col {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  text-align: left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  max-width: 540px !important;
+  z-index: 5 !important;
+}
+
+.promo-slide.has-video .promo-layout {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.promo-slide.has-video .promo-small-title {
+  color: #FDE047 !important;
+  font-weight: 800 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 14px rgba(253, 224, 71, 0.7) !important;
+  margin-bottom: 10px !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.promo-slide.has-video .promo-main-title {
+  background: linear-gradient(
+    110deg,
+    #ffffff 0%,
+    #ffffff 20%,
+    #fef08a 40%,
+    #f59e0b 50%,
+    #ffffff 65%,
+    #ffffff 100%
+  ) !important;
+  background-size: 250% 100% !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: goldShimmerSweep 5s ease-in-out infinite !important;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.5));
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.3px !important;
+  opacity: 1 !important;
+  transform: none !important;
+  margin-bottom: 20px !important;
+}
+
+.promo-slide.has-video .promo-bottom-action {
+  position: absolute !important;
+  bottom: 60px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 20 !important;
 }
 
 .promo-slide.active {
-  opacity: 1;
-  visibility: visible;
-  z-index: 10;
-  pointer-events: auto;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
   will-change: opacity;
 }
 
 .promo-slide.active.has-video {
   animation: none;
-}
-
-.promo-slide.has-video::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.08) 38%, rgba(0, 0, 0, 0) 70%);
 }
 
 .promo-slide.previous {
@@ -104,57 +166,50 @@
 .promo-layout {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Align everything to the left side */
-  gap: 40px; /* Reduced space so they hug the left */
+  justify-content: center; /* Center horizontally so content is never stuck in corners */
+  gap: 50px;
   width: 100%;
-  max-width: 1400px;
-  padding: 0 60px;
+  max-width: 1280px;
+  padding: 0 40px;
   height: 100%;
+  margin: 0 auto;
   box-sizing: border-box;
 }
 
 /* Left Column */
 .promo-text-col {
-  flex: 0 1 450px; /* Reduced width */
+  flex: 0 1 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 3;
 }
 
 .promo-small-title {
   color: #fbbf24;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 12px;
-  letter-spacing: 0.5px;
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-.promo-slide.active .promo-small-title {
-  animation: slideUpFadeModern 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 0.3s;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 1 !important;
+  transform: none !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 12px rgba(251, 191, 36, 0.5);
 }
 
 .promo-main-title {
   font-size: 2.2rem;
   font-weight: 800;
-  line-height: 1.15;
-  margin-bottom: 20px;
+  line-height: 1.2;
+  margin-bottom: 22px;
   font-family: serif;
   white-space: pre-line;
-  opacity: 0;
-  transform: translateY(30px);
-  
-  /* Gradient Text Effect */
-  background: linear-gradient(to right, #ffffff 20%, #fde047 40%, #fde047 60%, #ffffff 80%);
-  background-size: 200% auto;
-  color: #fff;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.promo-slide.active .promo-main-title {
-  animation: slideUpFadeModern 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 0.4s;
+  opacity: 1 !important;
+  transform: none !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 4px 18px rgba(0, 0, 0, 0.9), 0 0 24px rgba(253, 224, 71, 0.6) !important;
 }
 
 .promo-offer-box {
@@ -171,45 +226,63 @@
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  opacity: 0;
-  transform: translateY(30px);
+  opacity: 1 !important;
+  transform: none !important;
 }
 
-.promo-slide.active .promo-offer-box {
-  animation: slideUpFadeModern 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 0.5s;
+/* Bottom Action Area: Positioned down above the 3 dots for all slides & videos */
+.promo-bottom-action {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
 }
 
+.promo-bottom-action .promo-shop-btn,
 .promo-shop-btn {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-  color: white;
-  border: none;
-  padding: 10px 24px;
+  background: linear-gradient(135deg, #c06146 0%, #b85d43 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 28px;
   font-size: 0.95rem;
   font-weight: 700;
   border-radius: 50px;
   cursor: pointer;
-  box-shadow: 0 8px 25px rgba(217, 119, 6, 0.4), inset 0 2px 0 rgba(255,255,255,0.2);
+  box-shadow: 0 8px 24px rgba(184, 93, 67, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   text-transform: uppercase;
-  letter-spacing: 1px;
-  opacity: 0;
-  transform: translateY(30px);
+  letter-spacing: 0.8px;
+  opacity: 1 !important;
+  transform: none !important;
+  position: relative;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.promo-slide.active .promo-bottom-action .promo-shop-btn,
 .promo-slide.active .promo-shop-btn {
   animation: slideUpFadeModern 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 0.6s;
+  animation-delay: 0.3s;
 }
 
+.promo-bottom-action .promo-shop-btn:hover,
 .promo-shop-btn:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 12px 30px rgba(217, 119, 6, 0.6), inset 0 2px 0 rgba(255,255,255,0.4);
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 12px 30px rgba(184, 93, 67, 0.55), inset 0 2px 0 rgba(255,255,255,0.4);
+  background: linear-gradient(135deg, #c5684d 0%, #ab543b 100%);
 }
 
+.promo-bottom-action .promo-shop-btn:active,
 .promo-shop-btn:active {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(184, 93, 67, 0.4);
 }
 
 .promo-shop-btn-mobile {
@@ -571,9 +644,57 @@
     object-position: center center; /* Center the video */
   }
 
-  /* Make gradient top-to-bottom on mobile so text at top is readable, video at bottom is clear */
+  /* Clean natural transparent video overlay on mobile */
   .promo-slide.has-video::after {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 40%, rgba(0, 0, 0, 0) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.1) 45%, rgba(0, 0, 0, 0.5) 100%) !important;
+  }
+
+  /* 100% Transparent text container on mobile - No black box */
+  .promo-slide.has-video .promo-text-col {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 14px !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+    transform: translateY(-80px) !important; /* Position cleanly above video's 'The art of hands.' */
+  }
+
+  .promo-slide.has-video .promo-small-title {
+    color: #FDE047 !important;
+    font-size: 0.92rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 12px rgba(253, 224, 71, 0.7) !important;
+    margin-bottom: 8px !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .promo-slide.has-video .promo-main-title {
+    font-size: 1.55rem !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+    background: linear-gradient(
+      110deg,
+      #ffffff 0%,
+      #ffffff 20%,
+      #fef08a 40%,
+      #f59e0b 50%,
+      #ffffff 65%,
+      #ffffff 100%
+    ) !important;
+    background-size: 250% 100% !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: goldShimmerSweep 5s ease-in-out infinite !important;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.6)) !important;
+    margin-bottom: 14px !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .promo-small-title {
@@ -581,6 +702,8 @@
     width: 100%;
     margin-left: auto;
     margin-right: auto;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .promo-main-title {
@@ -591,6 +714,11 @@
     width: 100%;
     margin-left: auto;
     margin-right: auto;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+    transform: none !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 4px 16px rgba(0, 0, 0, 0.9), 0 0 20px rgba(253, 224, 71, 0.6) !important;
   }
 
   .promo-offer-box {
@@ -600,8 +728,46 @@
     text-align: center;
   }
 
-  .promo-text-col > .promo-shop-btn {
-    display: none;
+  /* Action Button positioned down above the 3 dots on mobile */
+  .promo-bottom-action {
+    position: absolute !important;
+    bottom: 50px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 25 !important;
+    width: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    pointer-events: auto !important;
+  }
+
+  .promo-bottom-action .promo-shop-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto !important;
+    min-width: 170px !important;
+    padding: 10px 28px !important;
+    font-size: 0.90rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #c06146 0%, #b85d43 100%) !important;
+    color: #ffffff !important;
+    border-radius: 999px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .slider-dots {
+    bottom: 16px !important;
+    padding: 5px 14px !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(4px) !important;
+    border-radius: 100px !important;
+    z-index: 25 !important;
+    gap: 8px !important;
   }
 
   .promo-product-col {
@@ -618,20 +784,7 @@
   }
 
   .promo-shop-btn-mobile {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 1;
-    transform: none;
-    min-width: 180px;
-    padding: 14px 30px;
-    font-size: 1rem;
-    margin: 0 auto;
-  }
-
-  .promo-slide.active .promo-shop-btn-mobile {
-    animation: slideUpFadeModern 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    animation-delay: 0.45s;
+    display: none !important;
   }
 
   .promo-starburst {

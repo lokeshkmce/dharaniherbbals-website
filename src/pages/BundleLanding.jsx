@@ -290,7 +290,7 @@ export default function BundleLanding() {
                   </div>
                   <div className="perk-item">
                     <Check size={15} color="#16a34a" />
-                    <span>100% Authentic Siddha & Ayurvedic herbs</span>
+                    <span>100% Authentic Siddha & Herbal ingredients</span>
                   </div>
                 </div>
 

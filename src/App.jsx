@@ -12,6 +12,7 @@ import { useAuthModal } from './context/AuthModalContext';
 import ImageSlider from './components/ImageSlider';
 import { Heart } from 'lucide-react';
 import { API_BASE_URL } from './services/api';
+import { getProductFallbackImage } from './utils/productFormatters';
 
 // Synchronous shared components
 import ProductCard from './components/ProductCard';
@@ -50,6 +51,7 @@ import FloatingSocials from './components/FloatingSocials';
 
 const ShoppableVideos = lazy(() => import('./components/ShoppableVideos'));
 const GoogleReviews = lazy(() => import('./components/GoogleReviews'));
+
 const HandpickedDeals = lazy(() => import('./components/HandpickedDeals'));
 const OurJourney = lazy(() => import('./components/OurJourney'));
 import Footer from './components/Footer';
@@ -172,7 +174,8 @@ function Home() {
 
   const [featuredProducts, setFeaturedProducts] = useState(() => {
     try {
-      const cached = localStorage.getItem('dharani_featured_cache_v8');
+      localStorage.removeItem('dharani_featured_cache_v9');
+      const cached = localStorage.getItem('dharani_featured_cache_v11');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed)) {
@@ -237,14 +240,26 @@ function Home() {
 
             const isValid = injectedRating !== null && !isNaN(injectedRating) && injectedRating > 0 && injectedReviews > 0;
 
+            // Direct authoritative product image from backend (Highest Priority)
+            let validatedImage = p.image ? resolveMediaUrl(p.image) : '';
+            if (
+              !validatedImage ||
+              typeof validatedImage !== 'string' ||
+              validatedImage.includes('Vaishnavi.jpeg') ||
+              validatedImage.endsWith('/logo.png')
+            ) {
+              validatedImage = getProductFallbackImage(p.name, p.id);
+            }
+
             return {
               ...p,
+              image: validatedImage,
               rating: isValid ? injectedRating : null,
               reviews: isValid ? injectedReviews : 0
             };
         });
         setFeaturedProducts(mappedData);
-        try { localStorage.setItem('dharani_featured_cache_v8', JSON.stringify(mappedData)); } catch(e) {}
+        try { localStorage.setItem('dharani_featured_cache_v11', JSON.stringify(mappedData)); } catch(e) {}
       })
       .catch(err => {
         if (err.name === 'AbortError') return;
@@ -255,12 +270,34 @@ function Home() {
     };
   }, []);
 
+  // Live sync featured products with fresh context products (so admin image updates apply instantly)
+  useEffect(() => {
+    if (!Array.isArray(products) || products.length === 0) return;
+    setFeaturedProducts(prev => {
+      if (!Array.isArray(prev) || prev.length === 0) return prev;
+      let hasChanges = false;
+      const updated = prev.map(p => {
+        const live = products.find(lp => String(lp.id) === String(p.id) || (lp.raw_name && p.name && lp.raw_name.toLowerCase().trim() === p.name.toLowerCase().trim()));
+        if (live && live.image && live.image !== p.image && !live.image.includes('Vaishnavi.jpeg') && !live.image.endsWith('/logo.png')) {
+          hasChanges = true;
+          return { ...p, image: live.image };
+        }
+        return p;
+      });
+      if (hasChanges) {
+        try { localStorage.setItem('dharani_featured_cache_v11', JSON.stringify(updated)); } catch(e) {}
+        return updated;
+      }
+      return prev;
+    });
+  }, [products]);
+
   const navigate = useNavigate();
 
   const [promoAds] = useState([
     { img: s1, alt: "Promo 1", productId: 1260 },
     { img: s2, alt: "Promo 2", productId: 1142 },
-    { img: s3, alt: "Promo 3", productId: 1243 },
+    { img: s3, alt: "Promo 3", productId: 1394 },
     { img: s4, alt: "Promo 4", productId: 1138 },
     { img: s5, alt: "Promo 5", productId: 1248 },
     { img: s6, alt: "Promo 6", productId: 1249 }
@@ -280,7 +317,7 @@ function Home() {
           image: "https://www.dharaniherbbals.in/logo.png",
           type: "website"
         }}
-        keywords={['dharani herbals', 'herbal products', 'siddha wellness', 'chemparuthi herbal shampoo', 'herbal hair oil', 'ayurvedic skincare']}
+        keywords={['dharani herbals', 'herbal products', 'siddha wellness', 'chemparuthi herbal shampoo', 'herbal hair oil', 'pure herbal skincare']}
       />
       {/* Full-width Image Slider */}
       <ImageSlider />
@@ -295,7 +332,7 @@ function Home() {
           <div className="bento-header-blob left"></div>
 
           <div className="bento-title-col">
-            <div className="bento-title-badge">✦ AYURVEDIC BESTSELLERS ✦</div>
+            <div className="bento-title-badge">✦ SIDDHA & HERBAL BESTSELLERS ✦</div>
             <h2 className="bento-title-text">
               {(() => {
                 const words = t('featuredTitle').split(' ');
@@ -318,8 +355,8 @@ function Home() {
 
         {/* Reuse the same ProductCard with full Tamil translation support */}
         <div className="shop-grid reveal-stagger" style={{ marginTop: '8px' }}>
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {featuredProducts.map((product, idx) => (
+            <ProductCard key={product.id} product={product} index={idx} />
           ))}
         </div>
 
@@ -381,6 +418,8 @@ function Home() {
           <div className="reveal">
             <OurJourney />
           </div>
+
+
 
           {/* Trust Badges Section */}
           <div className="reveal">

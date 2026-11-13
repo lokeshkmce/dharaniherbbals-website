@@ -43,16 +43,16 @@ export default function About() {
     <div className="about-page">
       <SeoHead
         title="About Us | Our Siddha Heritage & Mission | Dharani Herbals"
-        description="Learn about Dharani Herbals, our dedication to traditional Siddha and Ayurvedic botanical heritage, pure ingredients, and natural wellness."
+        description="Learn about Dharani Herbals, our dedication to traditional Siddha and herbal botanical heritage, pure ingredients, and natural wellness."
         canonicalUrl="https://www.dharaniherbbals.in/about"
         openGraph={{
           title: "About Us | Our Siddha Heritage & Mission | Dharani Herbals",
-          description: "Learn about Dharani Herbals, our dedication to traditional Siddha and Ayurvedic botanical heritage, pure ingredients, and natural wellness.",
+          description: "Learn about Dharani Herbals, our dedication to traditional Siddha and herbal botanical heritage, pure ingredients, and natural wellness.",
           url: "https://www.dharaniherbbals.in/about",
           image: "https://www.dharaniherbbals.in/logo.png",
           type: "website"
         }}
-        keywords={['about dharani herbals', 'siddha heritage', 'traditional herbal formulations', 'ayurvedic mission', 'tamil nadu herbal products']}
+        keywords={['about dharani herbals', 'siddha heritage', 'traditional herbal formulations', 'herbal mission', 'tamil nadu herbal products']}
       />
       {/* Hero Section */}
       <div className="about-hero">

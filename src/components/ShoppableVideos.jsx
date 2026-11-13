@@ -23,8 +23,8 @@ const baseVideoData = [
   { id: 5, videoUrl: '/videos/Wild%20Turmeric.mp4', productImg: p5, title: 'WILD TURMERIC', price: '₹140' }
 ];
 
-function LazyVideoCard({ item, addToCart, navigate, actualProduct }) {
-  const [hasLoaded, setHasLoaded] = useState(false);
+function LazyVideoCard({ item, addToCart, navigate, actualProduct, index = 0 }) {
+  const [hasLoaded, setHasLoaded] = useState(index < 3); // Pre-warm first 3 reels immediately
   const [videoPlaying, setVideoPlaying] = useState(false);
   const cardRef = useRef(null);
   const videoRef = useRef(null);
@@ -35,15 +35,18 @@ function LazyVideoCard({ item, addToCart, navigate, actualProduct }) {
         if (entry.isIntersecting) {
           setHasLoaded(true);
           if (videoRef.current && videoRef.current.paused) {
-            videoRef.current.play().then(() => setVideoPlaying(true)).catch(() => {});
+            const p = videoRef.current.play();
+            if (p && typeof p.then === 'function') {
+              p.then(() => setVideoPlaying(true)).catch(() => {});
+            }
           }
         } else {
-          if (videoRef.current) {
+          if (videoRef.current && !videoRef.current.paused) {
             videoRef.current.pause();
           }
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.1, rootMargin: '250px 0px' } // Pre-load 250px before entering viewport
     );
     if (cardRef.current) observer.observe(cardRef.current);
 
@@ -52,25 +55,38 @@ function LazyVideoCard({ item, addToCart, navigate, actualProduct }) {
     };
   }, []);
 
+  const handleCardClick = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play().then(() => setVideoPlaying(true)).catch(() => {});
+      } else {
+        videoRef.current.pause();
+        setVideoPlaying(false);
+      }
+    }
+  };
+
   const displayImg = (actualProduct && actualProduct.image) ? resolveMediaUrl(actualProduct.image) : item.productImg;
 
   return (
-    <div className="sv-card ultra" ref={cardRef}>
+    <div className="sv-card ultra" ref={cardRef} onClick={handleCardClick} role="button" tabIndex={0}>
       <div className="sv-video-bg">
         {displayImg && (
           <img
             src={displayImg}
             alt={actualProduct?.name || item.title}
             className="sv-card-poster"
+            loading={index < 2 ? "eager" : "lazy"}
+            decoding={index < 2 ? "sync" : "async"}
             style={{
               position: 'absolute',
               inset: 0,
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              filter: videoPlaying ? 'none' : 'brightness(0.85)',
+              filter: videoPlaying ? 'none' : 'brightness(0.9)',
               opacity: videoPlaying ? 0 : 1,
-              transition: 'opacity 0.25s ease',
+              transition: 'opacity 0.2s ease',
               zIndex: 0
             }}
           />
@@ -86,8 +102,13 @@ function LazyVideoCard({ item, addToCart, navigate, actualProduct }) {
             loop
             playsInline
             webkit-playsinline="true"
-            preload="metadata"
+            preload={index < 3 ? "auto" : "metadata"}
             onPlaying={() => setVideoPlaying(true)}
+            onLoadedData={() => {
+              if (videoRef.current && videoRef.current.paused) {
+                videoRef.current.play().then(() => setVideoPlaying(true)).catch(() => {});
+              }
+            }}
             style={{
               position: 'absolute',
               top: 0,
@@ -191,7 +212,7 @@ export default function ShoppableVideos() {
         </button>
 
         <div className="sv-track" ref={sliderRef}>
-          {videoData.map((item) => {
+          {videoData.map((item, idx) => {
             // Find the actual product by matching the title/name
             const actualProduct = products?.find(
               (p) => p.name.toUpperCase().includes(item.title.toUpperCase()) || item.title.toUpperCase().includes(p.name.toUpperCase())
@@ -200,6 +221,7 @@ export default function ShoppableVideos() {
               <LazyVideoCard 
                 key={item.id} 
                 item={item} 
+                index={idx}
                 addToCart={addToCart} 
                 navigate={navigate}
                 actualProduct={actualProduct}

@@ -281,7 +281,7 @@ export function prerenderAll() {
           title: 'Herbal Hair Care Combo - ₹219 | Dharani Herbals',
           description: 'Price: ₹219. Save ₹36 with this 3-in-1 Ayurvedic hair care routine. Verified 100% natural Siddha formulations.',
           url: `${SITE_DOMAIN}/combo/bundle-haircare-combo-1`,
-          image: 'https://vedanmart.com/images/hair/Hibiscus%20Shampoo.jpg',
+          image: `${SITE_DOMAIN}/logo.png`,
           type: 'product',
           priceAmount: '219.00',
           priceCurrency: 'INR'
@@ -298,7 +298,7 @@ export function prerenderAll() {
           title: 'Herbal Hair Care Combo - ₹219 | Dharani Herbals',
           description: 'Price: ₹219. Save ₹36 with this 3-in-1 Ayurvedic hair care routine. Verified 100% natural Siddha formulations.',
           url: `${SITE_DOMAIN}/combo/herbal-hair-care-combo`,
-          image: 'https://vedanmart.com/images/hair/Hibiscus%20Shampoo.jpg',
+          image: `${SITE_DOMAIN}/logo.png`,
           type: 'product',
           priceAmount: '219.00',
           priceCurrency: 'INR'

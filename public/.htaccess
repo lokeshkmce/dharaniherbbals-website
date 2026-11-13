@@ -14,10 +14,12 @@ DirectoryIndex index.html index.php
   # --------------------------------------------------------------------
   # 0. API Reverse Proxy Routing (HTTPS same-origin to Django Backend)
   # --------------------------------------------------------------------
-  # Route /api/* and /media/* directly to secure PHP reverse proxy, preventing Mixed Content blocks
+  # Route /herbal/*, /media/* and /api/* directly to secure PHP reverse proxy, preventing Mixed Content blocks
+  RewriteRule ^herbal/(.*)$ api_proxy.php?__route=herbal/$1 [QSA,L]
+  RewriteRule ^herbal/?$ api_proxy.php?__route=herbal/ [QSA,L]
+  RewriteRule ^media/(.*)$ api_proxy.php?__route=media/$1 [QSA,L]
   RewriteRule ^api/(.*)$ api_proxy.php?__route=$1 [QSA,L]
   RewriteRule ^api/?$ api_proxy.php?__route= [QSA,L]
-  RewriteRule ^media/(.*)$ api_proxy.php?__route=media/$1 [QSA,L]
 
   # --------------------------------------------------------------------
   # 1. Social Crawler Explicit Routing (WhatsApp, Facebook, Twitter, Telegram, etc.)

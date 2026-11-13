@@ -432,9 +432,9 @@ export default function Login() {
 
         {/* Left Side (Image) - Hidden on Mobile */}
         <div className="login-modal-left">
-          <img src={heartImg} alt="Dharani Herbbals" className="desktop-hero-img" />
+          <img src={heartImg} alt="Dharani Herbals" className="desktop-hero-img" />
           <div className="desktop-hero-overlay">
-            <div className="login-modal-brand"><h2>Dharani Herbbals</h2></div>
+            <div className="login-modal-brand"><h2>Dharani Herbals</h2></div>
             <h1 className="login-modal-title">Experience The Goodness Of Nature</h1>
             <p className="login-modal-subtitle">
               Authentic Siddha formulations with carefully sourced herbs for your daily wellness.
@@ -444,7 +444,7 @@ export default function Login() {
 
         {/* Hero Image - Hidden on Desktop */}
         <div className="login-modal-hero">
-          <img src={heartImg} alt="Dharani Herbbals" className="login-hero-img" />
+          <img src={heartImg} alt="Dharani Herbals" className="login-hero-img" />
         </div>
 
         {/* Right Side (White) */}
@@ -454,11 +454,11 @@ export default function Login() {
               <BrandLogoVideo variant="mobile-nav" />
               <div className="mobile-login-brand-text">
                 <span className="mobile-brand-line1">Dharani</span>
-                <span className="mobile-brand-line2">Herbbals<span className="brand-reg">®</span></span>
+                <span className="mobile-brand-line2">Herbals<span className="brand-reg">®</span></span>
               </div>
             </div>
             <h2 className="welcome-text">
-              {language === 'ta' ? 'தரணி ஹெர்பல்ஸிற்கு நல்வரவு!' : 'Welcome To Dharani Herbbals!'}
+              {language === 'ta' ? 'தரணி ஹெர்பல்ஸிற்கு நல்வரவு!' : 'Welcome To Dharani Herbals!'}
             </h2>
 
             <form onSubmit={showOtp ? handleVerifyOtp : handleSendOtp}>

@@ -15,43 +15,26 @@ export default defineConfig({
       ignored: ['**/dist/**', '**/.git/**', '**/node_modules/**', '**/*.zip', '**/dist*/**']
     },
     proxy: {
-      '/herbal/new-products': {
-        target: 'http://127.0.0.1:8000',
-        changeOrigin: true,
-        secure: false
-      },
       '/herbal': {
         target: 'http://179.197.251.47:30080',
         changeOrigin: true,
-        secure: false,
-        headers: {
-          host: '179.197.251.47:30080'
-        }
+        secure: false
       },
       '/media': {
         target: 'http://179.197.251.47:30080',
         changeOrigin: true,
-        secure: false,
-        headers: {
-          host: '179.197.251.47:30080'
-        }
+        secure: false
       },
       '/api/media': {
         target: 'http://179.197.251.47:30080',
         changeOrigin: true,
         secure: false,
-        headers: {
-          host: '179.197.251.47:30080'
-        },
         rewrite: (path) => path.replace(/^\/api\/media/, '/media')
       },
       '/api': {
         target: 'http://179.197.251.47:30080',
         changeOrigin: true,
         secure: false,
-        headers: {
-          host: '179.197.251.47:30080'
-        },
         rewrite: (path) => path.replace(/^\/api/, '/herbal')
       }
     }

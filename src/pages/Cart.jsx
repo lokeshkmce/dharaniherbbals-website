@@ -168,7 +168,7 @@ export default function Cart() {
                           <Plus size={16} />
                         </button>
                       </div>
-                      <button className="btn-cart-remove" onClick={() => removeFromCart(item.id)}>
+                      <button className="btn-cart-remove" onClick={() => removeFromCart(item.id || item.cartItemId)} type="button">
                         <Trash2 size={14} /> Remove
                       </button>
                     </div>

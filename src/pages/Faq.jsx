@@ -16,7 +16,7 @@ const FAQ_DATA = [
     category: 'products',
     questionEn: 'Are Dharani Herbbals products 100% natural and chemical-free?',
     questionTa: 'தாரணி ஹெர்பல்ஸ் தயாரிப்புகள் 100% இயற்கை மூலிகைகளால் செய்யப்பட்டவையா?',
-    answerEn: 'Yes, absolutely! All Dharani Herbbals formulations are crafted using 100% pure herbal and botanical ingredients inspired by authentic Siddha and Ayurvedic traditions. We never use harsh sulfates (SLS/SLES), parabens, mineral oils, artificial coloring, or toxic synthetic additives.',
+    answerEn: 'Yes, absolutely! All Dharani Herbals formulations are crafted using 100% pure herbal and botanical ingredients inspired by authentic Siddha and traditional herbal wellness heritage. We never use harsh sulfates (SLS/SLES), parabens, mineral oils, artificial coloring, or toxic synthetic additives.',
     answerTa: 'ஆம், நிச்சயமாக! தாரணி ஹெர்பல்ஸ் தயாரிப்புகள் அனைத்தும் பாரம்பரிய சித்த மருத்துவ முறையில் தூய இயற்கை மூலிகைகளால் மட்டுமே தயாரிக்கப்படுகின்றன. இதில் சல்பேட்டுகள் (SLS), பாராபென்கள், மினரல் ஆயில் அல்லது தீங்கு விளைவிக்கும் ரசாயனங்கள் எதுவும் சேர்க்கப்படுவதில்லை.'
   },
   {
@@ -130,7 +130,7 @@ const FAQ_DATA = [
     category: 'wholesale',
     questionEn: 'Do you offer bulk, wholesale, or dealership partnerships?',
     questionTa: 'மொத்த விற்பனை (Wholesale) அல்லது விநியோகஸ்தர் வாய்ப்பு உள்ளதா?',
-    answerEn: 'Yes! We supply directly to organic stores, Ayurvedic practitioners, pharmacies, and eco-friendly boutiques with attractive wholesale margins and verified batch purity. Contact us directly at +91 97881 22001 or email info@dharaniherbbals.in to discuss trade collaborations.',
+    answerEn: 'Yes! We supply directly to organic stores, traditional herbal practitioners, pharmacies, and eco-friendly boutiques with attractive wholesale margins and verified batch purity. Contact us directly at +91 97881 22001 or email info@dharaniherbbals.in to discuss trade collaborations.',
     answerTa: 'ஆம்! இயற்கை அங்காடிகள், மூலிகை விற்பனையாளர்கள் மற்றும் மருத்துவர்களுக்கு சிறப்பான மொத்த விற்பனை விலையில் வழங்குகிறோம். +91 97881 22001 என்ற எண்ணில் தொடர்பு கொண்டு விபரங்களை அறியலாம்.'
   },
   {

@@ -695,25 +695,45 @@ export function CartProvider({ children }) {
 
   const removeFromCart = async (productId) => {
     const user = getUser();
-    const itemToRemove = cartItems.find(item => item.id === productId);
+    const itemToRemove = cartItems.find(item => item.id === productId || item.cartItemId === productId);
+    const targetId = itemToRemove ? itemToRemove.id : productId;
+    const targetCartItemId = itemToRemove ? itemToRemove.cartItemId : null;
 
     // Optimistic UI Update - instantly remove it
-    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+    setCartItems(prevItems => {
+      const updated = prevItems.filter(item => item.id !== targetId && item.cartItemId !== productId);
+      if (!user) {
+        try {
+          localStorage.setItem('dharani_cart', JSON.stringify(updated.filter(i => !i.isBundle)));
+        } catch (e) {}
+      }
+      return updated;
+    });
 
     if (itemToRemove?.isBundle) {
       try {
-        const stored = getStoredBundleCartItems().filter(i => i.id !== productId);
+        const stored = getStoredBundleCartItems().filter(i => i.id !== targetId && i.id !== productId);
         saveStoredBundleCartItems(stored);
       } catch (e) {}
       return; // Local bundle item removed
     }
 
-    if (user && itemToRemove && itemToRemove.cartItemId && !String(itemToRemove.cartItemId).startsWith('guest-') && !String(itemToRemove.cartItemId).startsWith('offline-') && !String(itemToRemove.cartItemId).startsWith('bundle-')) {
+    if (!user) {
+      return;
+    }
+
+    if (user && targetCartItemId && !String(targetCartItemId).startsWith('guest-') && !String(targetCartItemId).startsWith('offline-') && !String(targetCartItemId).startsWith('bundle-')) {
       try {
-        await fetch(`${API_BASE_URL}/cart/${itemToRemove.cartItemId}/`, {
+        let res = await fetch(`${API_BASE_URL}/carts/${targetCartItemId}/`, {
           method: 'DELETE',
           headers: { 'ngrok-skip-browser-warning': 'true' }
         });
+        if (!res.ok) {
+          await fetch(`${API_BASE_URL}/cart/${targetCartItemId}/`, {
+            method: 'DELETE',
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+          });
+        }
         refreshCart();
       } catch (err) {
         console.error(err);
@@ -724,15 +744,26 @@ export function CartProvider({ children }) {
 
   const updateQuantity = async (productId, amount) => {
     const user = getUser();
-    const item = cartItems.find(item => item.id === productId);
+    const item = cartItems.find(item => item.id === productId || item.cartItemId === productId);
     if (!item) return;
 
-    const newQuantity = Math.max(1, item.quantity + amount);
+    const newQuantity = item.quantity + amount;
+    if (newQuantity <= 0) {
+      return removeFromCart(productId);
+    }
+
+    const targetId = item.id;
 
     // Optimistic UI Update - instantly update the number
-    setCartItems(prevItems =>
-      prevItems.map(i => i.id === productId ? { ...i, quantity: newQuantity } : i)
-    );
+    setCartItems(prevItems => {
+      const updated = prevItems.map(i => (i.id === targetId || i.cartItemId === productId) ? { ...i, quantity: newQuantity } : i);
+      if (!user) {
+        try {
+          localStorage.setItem('dharani_cart', JSON.stringify(updated.filter(i => !i.isBundle)));
+        } catch (e) {}
+      }
+      return updated;
+    });
 
     if (item.isBundle) {
       try {

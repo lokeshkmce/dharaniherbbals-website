@@ -1,4 +1,4 @@
-// Service for managing Product Bundles, Combo Offers, and Ad Campaign Links
+﻿// Service for managing Product Bundles, Combo Offers, and Ad Campaign Links
 
 const STORAGE_KEY = 'dharani_bundle_offers';
 
@@ -16,7 +16,7 @@ export const DEFAULT_BUNDLES = [
     slug: 'herbal-hair-care-combo',
     name: 'Herbal Hair Care Combo',
     tamil_name: 'மூலிகை கூந்தல் பராமரிப்பு காம்போ',
-    tagline: 'Complete 3-Step Ayurvedic Hair Care Routine',
+    tagline: 'Complete 3-Step Siddha & Herbal Hair Care Routine',
     description: 'An all-natural daily hair wellness ritual featuring Chemparuthi Shampoo, Hibiscus Herbal Hair Oil, and Traditional Hair Wash Powder to nourish roots, eliminate dandruff, and promote lustrous hair growth.',
     badge: 'BEST VALUE',
     badgeColor: 'emerald',
@@ -26,21 +26,21 @@ export const DEFAULT_BUNDLES = [
         productName: 'Chemparuthi Herbal Shampoo',
         quantity: 1,
         fallbackPrice: 70,
-        fallbackImage: 'https://vedanmart.com/images//hair/Hibiscus%20Shampoo.jpg'
+        fallbackImage: '/logo.png'
       },
       {
         productId: 1238,
         productName: 'Hibiscus Herbal Hair Oil',
         quantity: 1,
         fallbackPrice: 115,
-        fallbackImage: 'https://vedanmart.com/images/hair/Hibiscus%20Oil.jpg'
+        fallbackImage: '/logo.png'
       },
       {
         productId: 1233,
         productName: 'Hibiscus Hair Wash Powder',
         quantity: 1,
         fallbackPrice: 70,
-        fallbackImage: 'https://vedanmart.com/images/hair/HIBISCUS%20HAIRWASH%20POWDER.jpg'
+        fallbackImage: '/logo.png'
       }
     ],
     offerPrice: 219,
